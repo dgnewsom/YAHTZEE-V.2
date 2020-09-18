@@ -104,4 +104,12 @@ public class Dice {
 			die.Unhold();
 		}
 	}
+	
+	/*
+	 * Getters and Setters
+	 */
+	
+	public Die[] getDieArray() {
+		return dice;
+	}
 }

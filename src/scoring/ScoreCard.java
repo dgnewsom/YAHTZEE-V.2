@@ -274,4 +274,16 @@ public class ScoreCard {
 		}
 		return true;
 	}
+
+	/*
+	 * Getters and Setters
+	 */
+	public Integer getCategoryScore(Category category) {
+		if(categoriesUpper.contains(category)) {
+			return scoresUpper.get(category);
+		}
+		else {
+			return scoresLower.get(category);
+		}
+	}
 }
