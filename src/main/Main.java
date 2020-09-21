@@ -18,7 +18,7 @@ public class Main extends Application {
 	
 	public static void startGame(Stage stage) {
 		GUI gui = new GUI();
-		Game game = new Game(new String[] {"Danny","Louie","Lacey"});//,"Bob","Fred","Dave","Bill","Frank","John","Steve"
+		Game game = new Game(new String[] {"Danny","Louie","Lacey","Bob","Fred","Dave","Bill","Frank","John","Steve"});//,"Bob","Fred","Dave","Bill","Frank","John","Steve"
 		gui.setGame(game);
 		gui.constructWindow();
 	}

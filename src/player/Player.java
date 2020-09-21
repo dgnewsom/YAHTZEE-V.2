@@ -22,9 +22,14 @@ public class Player {
 		throwsRemaining = 3;
 	}
 
-	public void TakeTurn() {
-		throwsRemaining = 3;
-	
+	public void RollDice() {
+		if(throwsRemaining > 0) {
+			dice.RollDice();
+			throwsRemaining --;
+		}
+		if(throwsRemaining == 0) {
+			dice.CancelHeldDice();
+		}
 	}
 
 
@@ -35,18 +40,6 @@ public class Player {
 		dice.CancelHeldDice();
 		dice.RollDice();
 		
-	}
-
-	public void SelectDiceToHold() {
-		
-		//dice.HoldDice(diceInts);
-	}
-
-	private void printGame(boolean options) {
-		System.out.println(String.format("\n   %s's Turn", playerName));
-		scorecard.PrintScores(options, dice);
-		System.out.println();
-		dice.PrintDice();
 	}
 	
 	/*

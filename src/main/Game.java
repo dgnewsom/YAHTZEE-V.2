@@ -20,6 +20,16 @@ public class Game {
 		currentPlayer = players[currentPlayerIndex];
 		
 	}
+	
+	public void nextPlayer() {
+		if(currentPlayerIndex == players.length-1) {
+			currentPlayerIndex = 0;
+		}
+		else {
+			currentPlayerIndex ++;
+		}
+		currentPlayer = players[currentPlayerIndex];
+	}
 
 	/*
 	 * Getters and Setters

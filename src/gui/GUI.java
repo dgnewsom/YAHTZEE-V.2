@@ -1,7 +1,10 @@
 package gui;
 
+
+
 import dice.Dice;
 import dice.Die;
+import dice.DieButton;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -11,11 +14,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.TilePane;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import main.Game;
 import main.Main;
@@ -48,6 +52,7 @@ public class GUI {
 	 * Player pane fields
 	 */
 	private TilePane playerPane;
+	private Background greenBackground = new Background(new BackgroundFill(Color.FORESTGREEN, CornerRadii.EMPTY, Insets.EMPTY));
 	
 	public void constructWindow() {
 		
@@ -92,25 +97,47 @@ public class GUI {
 		dicePane.setAlignment(Pos.CENTER);
 		dicePane.setPadding(new Insets(5));
 		dicePane.setPrefWidth(600);
-		
-		throwsRemaining = new Label(String.format("%d Throws remaining...", game.getCurrentPlayer().getThrowsRemaining()));
+		dicePane.setBackground(greenBackground );
+		String throwsLabelString;
+		if(game.getCurrentPlayer().getThrowsRemaining() == 1) {
+			throwsLabelString = String.format("%d Roll remaining...", game.getCurrentPlayer().getThrowsRemaining());
+		}
+		else if(game.getCurrentPlayer().getThrowsRemaining() == 0){
+			throwsLabelString = String.format(game.getCurrentPlayer().getPlayerName() + " please enter your score...", game.getCurrentPlayer().getThrowsRemaining());
+		}
+		else {
+			throwsLabelString = String.format("%d Rolls remaining...", game.getCurrentPlayer().getThrowsRemaining());
+		}
+		throwsRemaining = new Label(throwsLabelString);
 		throwsRemaining.setFont(font);
+		throwsRemaining.setAlignment(Pos.CENTER);
 		
-		diceButtons = new TilePane(Orientation.HORIZONTAL, 10, 10);
+		diceButtons = new TilePane(Orientation.HORIZONTAL, 0, 0);
 		diceButtons.setPrefColumns(5);
 		
 		Dice dice = game.getCurrentPlayer().getDice(); 
 		for(Die die : dice.getDieArray()) {
-			Button temp = new Button();
+			DieButton temp = new DieButton(die);
 			temp.setFont(font);
-			temp.setText("" + die.getCurrentValue());
 			temp.setPrefWidth(100);
 			temp.setPrefHeight(100);
+			temp.setImage();
+			temp.setBackground(null);
+			temp.setOnMouseClicked(e->{if(game.getCurrentPlayer().getThrowsRemaining() > 0)
+									   temp.Click(e);
+									   constructWindow();});
 			diceButtons.getChildren().add(temp);
 		}
 		
 		rollButton = new Button("Roll Dice");
 		rollButton.setFont(font);
+		if(game.getCurrentPlayer().getThrowsRemaining() < 1) {
+       	 	rollButton.setDisable(true);
+        }
+		rollButton.setOnMouseClicked(e->{game.getCurrentPlayer().RollDice();
+		                                 constructWindow();
+		                                 
+		});
 		
 		dicePane.getChildren().addAll(throwsRemaining, diceButtons, rollButton);
 	}
@@ -140,12 +167,21 @@ public class GUI {
 			name.setPrefSize(100, 30);
 			Label score = new Label("___");
 			if(game.getCurrentPlayer().getScorecard().getCategoryScore(category) != null) {
-				score = new Label(String.format("%03d", game.getCurrentPlayer().getScorecard().getCategoryScore(category)));
+				score = new Label(String.format("%d", game.getCurrentPlayer().getScorecard().getCategoryScore(category)));
 			}
 			score.setPrefSize(100, 30);
 			score.setAlignment(Pos.CENTER);
 			Button submit = new Button(String.format("Score %s for %s", Category.CheckScore(game.getCurrentPlayer().getDice(),category), category.getDescriptionName()));
 			submit.setPrefSize(200, 30);
+			submit.setOnMouseClicked(e->{
+				game.getCurrentPlayer().getScorecard().setScore(game.getCurrentPlayer().getDice(), category);
+				game.getCurrentPlayer().getScorecard().Calculate();
+				game.nextPlayer();
+				constructWindow();
+			});
+			if(game.getCurrentPlayer().getScorecard().getCategoryScore(category) != null) {
+				submit.setVisible(false);
+			}
 			categoryLabels.getChildren().add(name);
 			scoreLabels.getChildren().add(score);
 			scoreButtons.getChildren().add(submit);
