@@ -12,6 +12,7 @@ public class Main extends Application {
 	public void start(Stage stage){
 		
 		Main.stage = stage;
+		stage.sizeToScene();
 		stage.setTitle("YAHTZEE!");
 		startGame(stage);		
 	}

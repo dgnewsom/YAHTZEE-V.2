@@ -172,4 +172,12 @@ public class ScoreCard {
 			return scoresLower.get(category);
 		}
 	}
+
+	public List<Category> getUpperCategories() {
+		return categoriesUpper;
+	}
+	
+	public List<Category> getLowerCategories() {
+		return categoriesLower;
+	}
 }
