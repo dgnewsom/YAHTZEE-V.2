@@ -12,14 +12,13 @@ public class Main extends Application {
 	public void start(Stage stage){
 		
 		Main.stage = stage;
-		stage.sizeToScene();
 		stage.setTitle("YAHTZEE!");
 		startGame(stage);		
 	}
 	
 	public static void startGame(Stage stage) {
 		GUI gui = new GUI();
-		Game game = new Game(new String[] {"Danny","Louie","Lacey","Bob","Fred","Dave","Bill","Frank","John","Steve"});//,"Bob","Fred","Dave","Bill","Frank","John","Steve"
+		Game game = new Game(new String[] {"Danny"});
 		gui.setGame(game);
 		gui.constructWindow();
 	}

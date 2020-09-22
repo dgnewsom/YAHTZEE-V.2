@@ -180,4 +180,39 @@ public class ScoreCard {
 	public List<Category> getLowerCategories() {
 		return categoriesLower;
 	}
+
+	public int getUpperSubTotal() {
+		Calculate();
+		return subTotalUpper;
+	}
+
+	public int getUpperBonus() {
+		Calculate();
+		return bonusUpper;
+	}
+
+	public int getUpperTotal() {
+		Calculate();
+		return totalUpper;
+	}
+
+	public int getLowerSubTotal() {
+		Calculate();
+		return subTotalLower;
+	}
+
+	public int getBonusYahtzees() {
+		Calculate();
+		return bonusYahtzees;
+	}
+
+	public int getLowerBonus() {
+		Calculate();
+		return bonusLower;
+	}
+
+	public int getLowerTotal() {
+		Calculate();
+		return totalLower;
+	}
 }

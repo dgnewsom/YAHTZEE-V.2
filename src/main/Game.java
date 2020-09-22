@@ -29,6 +29,8 @@ public class Game {
 			currentPlayerIndex ++;
 		}
 		currentPlayer = players[currentPlayerIndex];
+		currentPlayer.resetThrowsRemaining();
+		currentPlayer.getDice().RollDice();
 	}
 
 	/*

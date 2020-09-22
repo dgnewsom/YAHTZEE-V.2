@@ -1,7 +1,5 @@
 package scoring;
 
-import java.util.Arrays;
-
 import dice.Dice;
 
 public enum Category {
@@ -30,6 +28,7 @@ public enum Category {
 		
 		int result = 0;
 		int[] diceArr = dice.DiceAsIntArray();
+		boolean[] checkArray;
 		
 		switch (category) {
 		case ACES:
@@ -84,28 +83,29 @@ public enum Category {
 			}
 			break;
 		case SMALLSTRAIGHT:
-			Arrays.sort(diceArr);
-			int smallCount = 0;
-			for(int i = 1; i<diceArr.length;i++) {
-				if(diceArr[i] == diceArr[i-1]+1) {
-					smallCount ++;
+			checkArray = new boolean[6];
+			
+			for (int diceInt : diceArr) {
+				System.out.println(diceInt);
+				checkArray[diceInt-1] = true;
+			}
+			if((checkArray[0]&&checkArray[1]&&checkArray[2]&&checkArray[3])||
+			   (checkArray[1]&&checkArray[2]&&checkArray[3]&&checkArray[4])||
+			   (checkArray[2]&&checkArray[3]&&checkArray[4]&&checkArray[5])){
+					result = 30;
 				}
-			}
-			if(smallCount >= 3) {
-				result = 30;
-			}
 			break;
 		case LARGESTRAIGHT:
-			Arrays.sort(diceArr);
-			int largeCount = 0;
-			for(int i = 1; i<diceArr.length;i++) {
-				if(diceArr[i] == diceArr[i-1]+1) {
-					largeCount ++;
+			checkArray = new boolean[6];
+			
+			for (int diceInt : diceArr) {
+				System.out.println(diceInt);
+				checkArray[diceInt-1] = true;
+			}
+			if((checkArray[0]&&checkArray[1]&&checkArray[2]&&checkArray[3]&&checkArray[4])||
+			   (checkArray[1]&&checkArray[2]&&checkArray[3]&&checkArray[4]&&checkArray[5])){
+					result = 40;
 				}
-			}
-			if(largeCount >= 4) {
-				result = 40;
-			}
 			break;
 		case YAHTZEE:
 			for(int i = 1; i<=6;i++) {

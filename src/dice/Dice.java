@@ -13,9 +13,6 @@ public class Dice {
 		for (int i = 0; i < dice.length; i++) {
 			dice[i] = new Die();
 		}
-		diceDots = new String[][] {{"     ","*    ","*    ","*   *","*   *","*   *"},
-								   {"  *  ","     ","  *  ","     ","  *  ","*   *"},
-								   {"     ","    *","    *","*   *","*   *","*   *"}};
 	}
 	
 	public Dice(int[] diceArr) {
@@ -23,9 +20,6 @@ public class Dice {
 		for (int i = 0; i < dice.length; i++) {
 			dice[i] = new Die(diceArr[i]);
 		}
-		diceDots = new String[][] {{"     ","*    ","*    ","*   *","*   *","*   *"},
-			   {"  *  ","     ","  *  ","     ","  *  ","*   *"},
-			   {"     ","    *","    *","*   *","*   *","*   *"}};
 	}
 	
 	public void ToggleHold(int die) {
@@ -38,31 +32,6 @@ public class Dice {
 		for(Die die : dice) {
 			die.RollDie();
 		}
-	}
-	
-	public void PrintDice() {
-		int[] diceArr = DiceAsIntArray();
-		String[] held = new String[5];
-		for (int i = 0; i < held.length; i++) {
-			if(dice[i].isHeld()) {
-				held[i] = "X";
-			}
-			else {
-				held[i] = " ";
-			}
-		}
-		
-		System.out.println(String.format("          1        2        3        4        5\n"
-						               + "       -------  -------  -------  -------  ------- \n"
-				                       + "      | %5s || %5s || %5s || %5s || %5s |\n"
-				                       + "      | %5s || %5s || %5s || %5s || %5s |\n"
-				                       + "      | %5s || %5s || %5s || %5s || %5s |\n"
-				                       + "       -------  -------  -------  -------  ------- \n\n"
-				                       + "Held?     %1s        %1s        %1s        %1s        %1s\n", 
-				                       diceDots[0][diceArr[0]-1],diceDots[0][diceArr[1]-1],diceDots[0][diceArr[2]-1],diceDots[0][diceArr[3]-1],diceDots[0][diceArr[4]-1]
-				                      ,diceDots[1][diceArr[0]-1],diceDots[1][diceArr[1]-1],diceDots[1][diceArr[2]-1],diceDots[1][diceArr[3]-1],diceDots[1][diceArr[4]-1]
-		                              ,diceDots[2][diceArr[0]-1],diceDots[2][diceArr[1]-1],diceDots[2][diceArr[2]-1],diceDots[2][diceArr[3]-1],diceDots[2][diceArr[4]-1]
-		                              ,held[0],held[1],held[2],held[3],held[4]));
 	}
 	
 	public int[] DiceAsIntArray() {
