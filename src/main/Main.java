@@ -14,6 +14,9 @@ public class Main extends Application {
 	public void start(Stage stage){
 		
 		Main.stage = stage;
+		stage.setResizable(false);
+		stage.setX(150);
+		stage.setY(0);
 		stage.setTitle("YAHTZEE!");
 		startGame(stage);		
 	}

@@ -20,6 +20,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -48,7 +49,7 @@ import scoring.Category;
 public class GUI {
 
 	private Game game;
-	private Object[][] playerDetails = new Object[][]{{"Danny"},{DieColour.WHITE}};
+	private Object[][] playerDetails = new Object[][]{{"Danny","Louie"},{DieColour.WHITE,DieColour.BLACK}};
 	private BorderPane root;
 	
 	/*
@@ -80,6 +81,7 @@ public class GUI {
 	 */
 	private MenuBar menu;
 	private Menu file;
+	private Menu players;
 	
 	/*
 	 * Dice pane fields
@@ -131,6 +133,7 @@ public class GUI {
 	/*
 	 * Player pane fields
 	 */
+	private FlowPane playerBorder;
 	private TilePane playerPane;
 	private HBox grandTotals;
 
@@ -152,7 +155,7 @@ public class GUI {
 		
 		root.setTop(menu);
 		root.setCenter(gamePane);
-		root.setBottom(playerPane);
+		root.setBottom(playerBorder);
 		
 		
 		Scene scene = new Scene(root);
@@ -178,10 +181,34 @@ public class GUI {
 		*/
 		
 		file.getItems().addAll(newGame);
-		menu.getMenus().add(file);
+		
+		players = new Menu("Player Details");
+		
+		for(Player player : game.getPlayers()) {
+			Menu playerMenu = new Menu(player.getPlayerName());
+			
+			MenuItem scoreCard = new MenuItem(String.format("Display %s's scorecard", player.getPlayerName()));
+			scoreCard.setOnAction(e->{displayScorecard(player);});
+			
+			Menu colours = new Menu(String.format("Change %s's dice colour", player.getPlayerName()));
+			for(DieColour colour : DieColour.values()) {
+				MenuItem colourMenuItem = new MenuItem("");
+				colourMenuItem.setGraphic(new ImageView(String.format("/images/dice/Menu/%s.png",colour.getDescriptionName())));
+				colourMenuItem.setOnAction(e->{
+					player.setDieColour(colour);
+					constructWindow();
+				});
+				colours.getItems().add(colourMenuItem);
+			}
+			
+			playerMenu.getItems().addAll(scoreCard,colours);
+			players.getItems().add(playerMenu);
+		}
+		
+		menu.getMenus().addAll(file,players);
 		
 	}
-	
+
 	private void createDicePane() {
 		
 		dicePane = new TilePane(Orientation.VERTICAL);
@@ -412,7 +439,6 @@ public class GUI {
 		Label lowerTitleLabel = new Label("Lower Section");
 		lowerTitleLabel.setFont(sectionTitleFont);
 		lowerTitleLabel.setTextFill(Color.WHITE);
-		//lowerTitleLabel.setPrefHeight(30);
 		lowerTitle = new TilePane(lowerTitleLabel);
 		lowerTitle.setAlignment(Pos.CENTER);
 		lowerTitleLabel.setPadding(new Insets(5,0,20,0));
@@ -559,12 +585,10 @@ public class GUI {
 		grandTotals.setBorder(new Border(new BorderStroke(Color.WHITE, BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
 		
 		Label grandTotalLabel = new Label("GRAND TOTAL");
-		//grandTotalLabel.setPrefSize(leftColumnWidth, rowHeight);
 		grandTotalLabel.setFont(grandTotalFont);
 		grandTotalLabel.setTextFill(Color.WHITE);
 		
 		Label grandTotalScore = new Label("" + game.getCurrentPlayer().getScorecard().getGrandTotal());
-		//grandTotalScore.setPrefSize(centreColumnWidth, rowHeight);
 		grandTotalScore.setFont(grandTotalFont);
 		grandTotalScore.setAlignment(Pos.CENTER);
 		grandTotalScore.setTextFill(Color.WHITE);
@@ -580,13 +604,21 @@ public class GUI {
 	}
 	
 	private void createPlayersPane() {
+		
+		playerBorder = new FlowPane();
+		playerBorder.setPadding(new Insets(0,5,5,5));
+		playerBorder.setBackground(greenBackground);
+		
 		playerPane = new TilePane(Orientation.VERTICAL,5,5);
 		playerPane.setPrefRows(2);
 		playerPane.setAlignment(Pos.CENTER);
 		playerPane.setPadding(new Insets(10));
+		playerPane.setBackground(greenBackground);
+		playerPane.setBorder(new Border(new BorderStroke(Color.WHITE, BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
 		
 		Label title = new Label("Current scores");
 		title.setFont(scoreAreaNamesFont);
+		title.setTextFill(Color.WHITE);
 		
 		
 		TilePane names = new TilePane(Orientation.HORIZONTAL,5,5);
@@ -597,11 +629,13 @@ public class GUI {
 			Label name = new Label(player.getPlayerName() + " : " + player.getScorecard().getGrandTotal());
 			name.setPrefSize(150, 30);
 			name.setFont(new Font("Arial Bold",20));
+			name.setTextFill(Color.WHITE);
 			name.setAlignment(Pos.CENTER);
 			names.getChildren().add(name);
 		}
 		
 		playerPane.getChildren().addAll(title,names);
+		playerBorder.getChildren().add(playerPane);
 	}
 	
 	
@@ -806,5 +840,9 @@ public class GUI {
         Scene dialogScene = new Scene(rootPane, 500, 40);
         dialog.setScene(dialogScene);
         dialog.showAndWait();
+	}
+	
+	private void displayScorecard(Player player) {
+		System.out.println(String.format("%s's Scorcard displayed", player.getPlayerName()));
 	}
 }
