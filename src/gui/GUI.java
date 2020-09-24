@@ -81,6 +81,7 @@ public class GUI {
 	 * Dice pane fields
 	 */
 	private TilePane dicePane;
+	private Label rollNumber;
 	private Label throwsRemaining;
 	private TilePane diceButtons;
 	private Button rollButton;
@@ -95,6 +96,7 @@ public class GUI {
 	private int leftColumnWidth = 250;
 	private int centreColumnWidth = 100;
 	private int rightColumnWidth = 300;
+	
 	//Upper Section
 	private VBox upperSection;
 	private TilePane upperTitle;
@@ -181,6 +183,14 @@ public class GUI {
 		dicePane.setPadding(new Insets(5));
 		dicePane.setPrefSize(800, 800);
 		dicePane.setBackground(greenBackground );
+		rollNumber = new Label(String.format("Roll %d", 4-game.getCurrentPlayer().getThrowsRemaining()));	
+		rollNumber.setFont(dicePaneFont);
+		rollNumber.setAlignment(Pos.CENTER);
+		rollNumber.setTextFill(Color.WHITE);
+		if(game.getCurrentPlayer().getThrowsRemaining()<=0) {
+			rollNumber.setVisible(false);
+		}
+		
 		String throwsLabelString;
 		if(game.getCurrentPlayer().getThrowsRemaining() == 1) {
 			throwsLabelString = String.format("%d Roll remaining...", game.getCurrentPlayer().getThrowsRemaining());
@@ -212,9 +222,14 @@ public class GUI {
 									   constructWindow();});
 			diceButtons.getChildren().add(temp);
 		}
+		if(game.getCurrentPlayer().getThrowsRemaining()>=3) {
+			diceButtons.setVisible(false);
+		}
 		
 		rollButton = new Button("Roll Dice");
 		rollButton.setFont(dicePaneFont);
+		rollButton.setTextFill(Color.WHITE);
+		rollButton.setBackground(darkGreenBackground);
 		if(game.getCurrentPlayer().getThrowsRemaining() < 1) {
        	 	rollButton.setDisable(true);
         }
@@ -223,7 +238,7 @@ public class GUI {
 		                                 
 		});
 		
-		dicePane.getChildren().addAll(throwsRemaining, diceButtons, rollButton);
+		dicePane.getChildren().addAll(rollNumber,throwsRemaining, diceButtons, rollButton);
 	}
 	
 	private void createScorePane() {

@@ -16,7 +16,7 @@ public class Player {
 		dice = new Dice();
 		scorecard = new ScoreCard();
 		playerName = name;
-		throwsRemaining = 2;
+		throwsRemaining = 3;
 		this.dieColour = dieColour;
 	}
 
@@ -52,7 +52,7 @@ public class Player {
 
 	public void resetThrowsRemaining() {
 		RollDice();
-		throwsRemaining = 2;
+		throwsRemaining = 3;
 	}
 
 	public DieColour getDieColour() {
