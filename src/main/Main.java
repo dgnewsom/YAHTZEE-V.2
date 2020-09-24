@@ -20,7 +20,7 @@ public class Main extends Application {
 	
 	public static void startGame(Stage stage) {
 		GUI gui = new GUI();
-		Game game = new Game(gui.getPlayerDetails());//,new DieColour[] {DieColour.WHITE,DieColour.BLACK});
+		Game game = new Game(gui.getPlayerDetails());
 		gui.setGame(game);
 		gui.constructWindow();
 	}

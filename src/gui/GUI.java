@@ -25,7 +25,11 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.BorderStroke;
+import javafx.scene.layout.BorderStrokeStyle;
+import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -44,7 +48,7 @@ import scoring.Category;
 public class GUI {
 
 	private Game game;
-	private Object[][] playerDetails = new Object[2][Main.getNumberOfPlayers()];
+	private Object[][] playerDetails = new Object[][]{{"Danny"},{DieColour.WHITE}};
 	private BorderPane root;
 	
 	/*
@@ -61,12 +65,12 @@ public class GUI {
 	
 	//ScoreCard
 	private Font playerNameFont = new Font("Arial Bold", 45);
-	private Font sectionTitleFont = new Font("Arial Bold", 30);
-	private Font boldTitleFont = new Font("Arial Bold", 20);
+	private Font sectionTitleFont = new Font("Arial Bold", 25);
+	private Font boldTitleFont = new Font("Arial Bold", 15);
 	private Font titleFont = new Font("Arial", 15);
 	private Font descriptionFont = new Font("Arial", 15);
 	private Font scoreButtonFont = new Font("Arial Bold",15);
-	private Font grandTotalFont = new Font("Arial Bold", 20);
+	private Font grandTotalFont = new Font("Arial Bold", 30);
 	
 	//Players pane
 	private Font scoreAreaNamesFont = new Font("Arial Bold", 30);
@@ -92,10 +96,11 @@ public class GUI {
 	private VBox scoreCardPane;
 	private TilePane playerName;
 	
-	private int rowHeight = 25;
-	private int leftColumnWidth = 250;
+	private int rowHeight = 30;
+	private int leftColumnWidth = 200;
 	private int centreColumnWidth = 100;
 	private int rightColumnWidth = 300;
+	private int totalsRowHeight = 25;
 	
 	//Upper Section
 	private VBox upperSection;
@@ -127,6 +132,7 @@ public class GUI {
 	 * Player pane fields
 	 */
 	private TilePane playerPane;
+	private HBox grandTotals;
 
 	
 	
@@ -183,6 +189,21 @@ public class GUI {
 		dicePane.setPadding(new Insets(5));
 		dicePane.setPrefSize(800, 800);
 		dicePane.setBackground(greenBackground );
+		
+		/*
+		 * Players name
+		 */
+		Label nameLabel = new Label(String.format("%s's turn.", game.getCurrentPlayer().getPlayerName()));
+		nameLabel.setFont(playerNameFont);
+		nameLabel.setTextFill(Color.WHITE);
+		nameLabel.setPrefHeight(50);
+		playerName = new TilePane(nameLabel);
+		playerName.setAlignment(Pos.CENTER);
+		playerName.setPadding(new Insets(5,10,5,10));
+		playerName.setPrefWidth(scoreCardWidth);
+		playerName.setMaxHeight(60);
+		dicePane.getChildren().add(playerName);
+		
 		rollNumber = new Label(String.format("Roll %d", 4-game.getCurrentPlayer().getThrowsRemaining()));	
 		rollNumber.setFont(dicePaneFont);
 		rollNumber.setAlignment(Pos.CENTER);
@@ -243,36 +264,26 @@ public class GUI {
 	
 	private void createScorePane() {
 		
-		scoreCardPane = new VBox();
+		scoreCardPane = new VBox(10);
 		scoreCardPane.setBackground(greenBackground);
-		scoreCardPane.setPadding(new Insets(20));
-		/*
-		 * Players name
-		 */
-		Label nameLabel = new Label(String.format("%s's turn.", game.getCurrentPlayer().getPlayerName()));
-		nameLabel.setFont(playerNameFont);
-		nameLabel.setTextFill(Color.WHITE);
-		nameLabel.setPrefHeight(50);
-		playerName = new TilePane(nameLabel);
-		playerName.setAlignment(Pos.CENTER);
-		playerName.setPadding(new Insets(10));
-		playerName.setPrefWidth(scoreCardWidth);
-		playerName.setMaxHeight(60);
-		scoreCardPane.getChildren().add(playerName);
+		scoreCardPane.setPadding(new Insets(10,20,10,20));
 		
 		/*
 		 * Upper section
 		 */
 		
 		upperSection = new VBox();
+		upperSection.setPadding(new Insets(10,20,10,20));
+		upperSection.setBorder(new Border(new BorderStroke(Color.WHITE, BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
+		
 		//Title
 		Label upperTitleLabel = new Label("Upper Section");
 		upperTitleLabel.setFont(sectionTitleFont);
 		upperTitleLabel.setTextFill(Color.WHITE);
-		upperTitleLabel.setPrefHeight(30);
+		//upperTitleLabel.setPrefHeight(30);
 		upperTitle = new TilePane(upperTitleLabel);
-		upperTitle.setAlignment(Pos.CENTER_LEFT);
-		upperTitle.setPadding(new Insets(5));
+		upperTitle.setAlignment(Pos.CENTER);
+		upperTitle.setPadding(new Insets(5,0,20,0));
 		upperTitle.setPrefWidth(scoreCardWidth);
 		upperSection.getChildren().add(upperTitle);
 		
@@ -281,13 +292,13 @@ public class GUI {
 		upperScores.setPadding(new Insets(0,10,0,10));
 		upperScores.setAlignment(Pos.CENTER);
 		
-		upperCategoryLabels = new TilePane(Orientation.VERTICAL, 0, 5);
+		upperCategoryLabels = new TilePane(Orientation.VERTICAL,0,2);
 		upperCategoryLabels.setPrefRows(6);
 		
-		upperScoreLabels = new TilePane(Orientation.VERTICAL, 0, 5);
+		upperScoreLabels = new TilePane(Orientation.VERTICAL,0,2);
 		upperScoreLabels.setPrefRows(6);
 		
-		upperScoreButtons = new TilePane(Orientation.VERTICAL, 0, 5);
+		upperScoreButtons = new TilePane(Orientation.VERTICAL,0,2);
 		upperScoreButtons.setPrefRows(6);
 		
 		for(Category category : game.getCurrentPlayer().getScorecard().getUpperCategories()) {
@@ -295,7 +306,7 @@ public class GUI {
 			name.setPrefSize(leftColumnWidth, rowHeight);
 			name.setFont(titleFont);
 			name.setTextFill(Color.WHITE);
-			Label score = new Label("___");
+			Label score = new Label("---");
 			if(game.getCurrentPlayer().getScorecard().getCategoryScore(category) != null) {
 				score = new Label(String.format("%d", game.getCurrentPlayer().getScorecard().getCategoryScore(category)));
 			}
@@ -328,60 +339,60 @@ public class GUI {
 		upperSection.getChildren().add(upperScores);
 		
 		upperTotals = new HBox();
-		upperTotals.setPrefHeight(110);
+		upperTotals.setPrefHeight(100);
 		upperTotals.setPadding(new Insets(10));
 		upperTotals.setAlignment(Pos.CENTER);
 		
-		upperTotalLabels = new TilePane(Orientation.VERTICAL, 0, 5);
+		upperTotalLabels = new TilePane(Orientation.VERTICAL, 0, 0);
 		
 		Label upperSubTotalLabel = new Label("Sub Total");
-		upperSubTotalLabel.setPrefSize(leftColumnWidth, rowHeight);
+		upperSubTotalLabel.setPrefSize(leftColumnWidth, totalsRowHeight);
 		upperSubTotalLabel.setFont(boldTitleFont);
 		upperSubTotalLabel.setTextFill(Color.WHITE);
 		Label upperBonusLabel = new Label("Upper Bonus");
-		upperBonusLabel.setPrefSize(leftColumnWidth, rowHeight);
+		upperBonusLabel.setPrefSize(leftColumnWidth, totalsRowHeight);
 		upperBonusLabel.setFont(boldTitleFont);
 		upperBonusLabel.setTextFill(Color.WHITE);
 		Label upperTotalLabel = new Label("Upper Section Total");
-		upperTotalLabel.setPrefSize(leftColumnWidth, rowHeight);
+		upperTotalLabel.setPrefSize(leftColumnWidth, totalsRowHeight);
 		upperTotalLabel.setFont(boldTitleFont);
 		upperTotalLabel.setTextFill(Color.WHITE);
 		upperTotalLabels.getChildren().addAll(upperSubTotalLabel,upperBonusLabel,upperTotalLabel);
 		
-		upperTotalScores = new TilePane(Orientation.VERTICAL, 0, 5);
+		upperTotalScores = new TilePane(Orientation.VERTICAL, 0, 0);
 		
 		Label upperSubTotalScore = new Label("" + game.getCurrentPlayer().getScorecard().getUpperSubTotal());
-		upperSubTotalScore.setPrefSize(centreColumnWidth, rowHeight);
+		upperSubTotalScore.setPrefSize(centreColumnWidth, totalsRowHeight);
 		upperSubTotalScore.setFont(boldTitleFont);
 		upperSubTotalScore.setAlignment(Pos.CENTER);
 		upperSubTotalScore.setTextFill(Color.WHITE);
 		Label upperBonusScore = new Label("" + game.getCurrentPlayer().getScorecard().getUpperBonus());
-		upperBonusScore.setPrefSize(centreColumnWidth, rowHeight);
+		upperBonusScore.setPrefSize(centreColumnWidth, totalsRowHeight);
 		upperBonusScore.setFont(boldTitleFont);
 		upperBonusScore.setAlignment(Pos.CENTER);
 		upperBonusScore.setTextFill(Color.WHITE);
 		Label upperTotalScore = new Label("" + game.getCurrentPlayer().getScorecard().getUpperTotal());
-		upperTotalScore.setPrefSize(centreColumnWidth, rowHeight);
+		upperTotalScore.setPrefSize(centreColumnWidth, totalsRowHeight);
 		upperTotalScore.setFont(boldTitleFont);
 		upperTotalScore.setAlignment(Pos.CENTER);
 		upperTotalScore.setTextFill(Color.WHITE);
 		
 		upperTotalScores.getChildren().addAll(upperSubTotalScore,upperBonusScore,upperTotalScore);
 		
-		upperTotalDescriptions = new TilePane(Orientation.VERTICAL, 0, 5);
+		upperTotalDescriptions = new TilePane(Orientation.VERTICAL,0,0);
 		
 		Label upperSubTotalDescription = new Label("");
-		upperSubTotalDescription.setPrefSize(rightColumnWidth, rowHeight);
-		upperSubTotalDescription.setFont(boldTitleFont);
+		upperSubTotalDescription.setPrefSize(rightColumnWidth, totalsRowHeight);
+		upperSubTotalDescription.setFont(descriptionFont);
 		upperSubTotalDescription.setTextFill(Color.WHITE);
 		Label upperBonusDescription = new Label("(Score 35 if subtotal > 63)");
-		upperBonusDescription.setPrefSize(rightColumnWidth, rowHeight);
+		upperBonusDescription.setPrefSize(rightColumnWidth, totalsRowHeight);
 		upperBonusDescription.setFont(descriptionFont);
 		upperBonusDescription.setAlignment(Pos.CENTER);
 		upperBonusDescription.setTextFill(Color.WHITE);
 		Label upperTotalDescription = new Label("");
-		upperTotalDescription.setPrefSize(rightColumnWidth, rowHeight);
-		upperTotalDescription.setFont(boldTitleFont);
+		upperTotalDescription.setPrefSize(rightColumnWidth, totalsRowHeight);
+		upperTotalDescription.setFont(descriptionFont);
 		upperTotalDescription.setTextFill(Color.WHITE);
 		
 		upperTotalDescriptions.getChildren().addAll(upperSubTotalDescription,upperBonusDescription,upperTotalDescription);
@@ -395,30 +406,32 @@ public class GUI {
 		 */
 		
 		lowerSection = new VBox();
+		lowerSection.setPadding(new Insets(10,20,0,20));
+		lowerSection.setBorder(new Border(new BorderStroke(Color.WHITE, BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
 		//Title
 		Label lowerTitleLabel = new Label("Lower Section");
 		lowerTitleLabel.setFont(sectionTitleFont);
 		lowerTitleLabel.setTextFill(Color.WHITE);
-		lowerTitleLabel.setPrefHeight(30);
+		//lowerTitleLabel.setPrefHeight(30);
 		lowerTitle = new TilePane(lowerTitleLabel);
-		lowerTitle.setAlignment(Pos.CENTER_LEFT);
-		lowerTitle.setPadding(new Insets(5));
+		lowerTitle.setAlignment(Pos.CENTER);
+		lowerTitleLabel.setPadding(new Insets(5,0,20,0));
 		lowerTitle.setPrefWidth(scoreCardWidth);
 		//lowerTitle.setMaxHeight(30);
-		scoreCardPane.getChildren().add(lowerTitle);
+		lowerSection.getChildren().add(lowerTitle);
 		
 		//Categories / Scores / Buttons
 		lowerScores = new FlowPane();
 		lowerScores.setPadding(new Insets(0,10,0,10));
 		lowerScores.setAlignment(Pos.CENTER);
 		
-		lowerCategoryLabels = new TilePane(Orientation.VERTICAL, 0, 5);
+		lowerCategoryLabels = new TilePane(Orientation.VERTICAL, 0, 2);
 		lowerCategoryLabels.setPrefRows(7);
 		
-		lowerScoreLabels = new TilePane(Orientation.VERTICAL, 0, 5);
+		lowerScoreLabels = new TilePane(Orientation.VERTICAL, 0, 2);
 		lowerScoreLabels.setPrefRows(7);
 		
-		lowerScoreButtons = new TilePane(Orientation.VERTICAL, 0, 5);
+		lowerScoreButtons = new TilePane(Orientation.VERTICAL, 0, 2);
 		lowerScoreButtons.setPrefRows(7);
 		
 		for(Category category : game.getCurrentPlayer().getScorecard().getLowerCategories()) {
@@ -426,7 +439,7 @@ public class GUI {
 			name.setPrefSize(leftColumnWidth, rowHeight);
 			name.setFont(titleFont);
 			name.setTextFill(Color.WHITE);
-			Label score = new Label("___");
+			Label score = new Label("---");
 			if(game.getCurrentPlayer().getScorecard().getCategoryScore(category) != null) {
 				score = new Label(String.format("%d", game.getCurrentPlayer().getScorecard().getCategoryScore(category)));
 			}
@@ -457,98 +470,113 @@ public class GUI {
 		lowerSection.getChildren().add(lowerScores);
 		
 		lowerTotals = new HBox();
+		lowerTotals.setPrefHeight(130);
 		lowerTotals.setPadding(new Insets(10));
 		lowerTotals.setAlignment(Pos.CENTER);
 		
-		lowerTotalLabels = new TilePane(Orientation.VERTICAL, 0, 5);
+		lowerTotalLabels = new TilePane(Orientation.VERTICAL, 0, 0);
 		
 		Label lowerSubTotalLabel = new Label("Sub Total");
-		lowerSubTotalLabel.setPrefSize(leftColumnWidth, rowHeight);
+		lowerSubTotalLabel.setPrefSize(leftColumnWidth, totalsRowHeight);
 		lowerSubTotalLabel.setFont(boldTitleFont);
 		lowerSubTotalLabel.setTextFill(Color.WHITE);
 		Label lowerBonusYahtzeesLabel = new Label("Bonus Yahtzees");
-		lowerBonusYahtzeesLabel.setPrefSize(leftColumnWidth, rowHeight);
+		lowerBonusYahtzeesLabel.setPrefSize(leftColumnWidth, totalsRowHeight);
 		lowerBonusYahtzeesLabel.setFont(boldTitleFont);
 		lowerBonusYahtzeesLabel.setTextFill(Color.WHITE);
 		Label lowerBonusLabel = new Label("Lower Bonus");
-		lowerBonusLabel.setPrefSize(leftColumnWidth, rowHeight);
+		lowerBonusLabel.setPrefSize(leftColumnWidth, totalsRowHeight);
 		lowerBonusLabel.setFont(boldTitleFont);
 		lowerBonusLabel.setTextFill(Color.WHITE);
 		Label lowerTotalLabel = new Label("Lower Section Total");
-		lowerTotalLabel.setPrefSize(leftColumnWidth, rowHeight);
+		lowerTotalLabel.setPrefSize(leftColumnWidth, totalsRowHeight);
 		lowerTotalLabel.setFont(boldTitleFont);
 		lowerTotalLabel.setTextFill(Color.WHITE);
-		Label grandTotalLabel = new Label("Grand Total");
-		grandTotalLabel.setPrefSize(leftColumnWidth, rowHeight);
-		grandTotalLabel.setFont(grandTotalFont);
-		grandTotalLabel.setTextFill(Color.WHITE);
-		
-		lowerTotalLabels.getChildren().addAll(lowerSubTotalLabel,lowerBonusYahtzeesLabel,lowerBonusLabel,lowerTotalLabel,grandTotalLabel);
 		
 		
-		lowerTotalScores = new TilePane(Orientation.VERTICAL, 0, 5);
+		lowerTotalLabels.getChildren().addAll(lowerSubTotalLabel,lowerBonusYahtzeesLabel,lowerBonusLabel,lowerTotalLabel);
+		
+		
+		lowerTotalScores = new TilePane(Orientation.VERTICAL, 0, 0);
 		
 		Label lowerSubTotalScore = new Label("" + game.getCurrentPlayer().getScorecard().getLowerSubTotal());
-		lowerSubTotalScore.setPrefSize(centreColumnWidth, rowHeight);
+		lowerSubTotalScore.setPrefSize(centreColumnWidth, totalsRowHeight);
 		lowerSubTotalScore.setFont(boldTitleFont);
 		lowerSubTotalScore.setAlignment(Pos.CENTER);
 		lowerSubTotalScore.setTextFill(Color.WHITE);
 		Label lowerBonusYahtzeeScore = new Label("" + game.getCurrentPlayer().getScorecard().getBonusYahtzees());
-		lowerBonusYahtzeeScore.setPrefSize(centreColumnWidth, rowHeight);
+		lowerBonusYahtzeeScore.setPrefSize(centreColumnWidth, totalsRowHeight);
 		lowerBonusYahtzeeScore.setFont(boldTitleFont);
 		lowerBonusYahtzeeScore.setAlignment(Pos.CENTER);
 		lowerBonusYahtzeeScore.setTextFill(Color.WHITE);
 		Label lowerBonusScore = new Label("" + game.getCurrentPlayer().getScorecard().getLowerBonus());
-		lowerBonusScore.setPrefSize(centreColumnWidth, rowHeight);
+		lowerBonusScore.setPrefSize(centreColumnWidth, totalsRowHeight);
 		lowerBonusScore.setFont(boldTitleFont);
 		lowerBonusScore.setAlignment(Pos.CENTER);
 		lowerBonusScore.setTextFill(Color.WHITE);
 		Label lowerTotalScore = new Label("" + game.getCurrentPlayer().getScorecard().getLowerTotal());
-		lowerTotalScore.setPrefSize(centreColumnWidth, rowHeight);
+		lowerTotalScore.setPrefSize(centreColumnWidth, totalsRowHeight);
 		lowerTotalScore.setFont(boldTitleFont);
 		lowerTotalScore.setAlignment(Pos.CENTER);
 		lowerTotalScore.setTextFill(Color.WHITE);
-		Label grandTotalScore = new Label("" + game.getCurrentPlayer().getScorecard().getGrandTotal());
-		grandTotalScore.setPrefSize(centreColumnWidth, rowHeight);
-		grandTotalScore.setFont(grandTotalFont);
-		grandTotalScore.setAlignment(Pos.CENTER);
-		grandTotalScore.setTextFill(Color.WHITE);
 		
-		lowerTotalScores.getChildren().addAll(lowerSubTotalScore,lowerBonusYahtzeeScore,lowerBonusScore,lowerTotalScore,grandTotalScore);
 		
-		lowerTotalDescriptions = new TilePane(Orientation.VERTICAL, 0, 5);
+		lowerTotalScores.getChildren().addAll(lowerSubTotalScore,lowerBonusYahtzeeScore,lowerBonusScore,lowerTotalScore);
+		
+		lowerTotalDescriptions = new TilePane(Orientation.VERTICAL, 0, 0);
 		
 		Label lowerSubTotalDescription = new Label("");
-		lowerSubTotalDescription.setPrefSize(rightColumnWidth, rowHeight);
+		lowerSubTotalDescription.setPrefSize(rightColumnWidth, totalsRowHeight);
 		lowerSubTotalDescription.setFont(boldTitleFont);
 		lowerSubTotalDescription.setTextFill(Color.WHITE);
 		Label lowerBonusYahtzeesDescription = new Label("");
-		lowerBonusYahtzeesDescription.setPrefSize(rightColumnWidth, rowHeight);
+		lowerBonusYahtzeesDescription.setPrefSize(rightColumnWidth, totalsRowHeight);
 		lowerBonusYahtzeesDescription.setFont(descriptionFont);
 		lowerBonusYahtzeesDescription.setAlignment(Pos.CENTER);
 		lowerBonusYahtzeesDescription.setTextFill(Color.WHITE);
 		Label lowerBonusDescription = new Label("(Score 100 for each bonus YAHTZEE!)");
-		lowerBonusDescription.setPrefSize(rightColumnWidth, rowHeight);
+		lowerBonusDescription.setPrefSize(rightColumnWidth, totalsRowHeight);
 		lowerBonusDescription.setFont(descriptionFont);
 		lowerBonusDescription.setAlignment(Pos.CENTER);
 		lowerBonusDescription.setTextFill(Color.WHITE);
 		Label lowerTotalDescription = new Label("");
-		lowerTotalDescription.setPrefSize(rightColumnWidth, rowHeight);
+		lowerTotalDescription.setPrefSize(rightColumnWidth, totalsRowHeight);
 		lowerTotalDescription.setFont(boldTitleFont);
+		lowerTotalDescription.setAlignment(Pos.CENTER);
 		lowerTotalDescription.setTextFill(Color.WHITE);
+		
+		
+		lowerTotalDescriptions.getChildren().addAll(lowerSubTotalDescription,lowerBonusYahtzeesDescription,lowerBonusDescription,lowerTotalDescription);
+		
+		
+		lowerTotals.getChildren().addAll(lowerTotalLabels,lowerTotalScores,lowerTotalDescriptions);
+		lowerSection.getChildren().add(lowerTotals);
+		scoreCardPane.getChildren().add(lowerSection);
+		
+		grandTotals = new HBox(50);
+		grandTotals.setPadding(new Insets(10));
+		grandTotals.setAlignment(Pos.CENTER);
+		grandTotals.setBorder(new Border(new BorderStroke(Color.WHITE, BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
+		
+		Label grandTotalLabel = new Label("GRAND TOTAL");
+		//grandTotalLabel.setPrefSize(leftColumnWidth, rowHeight);
+		grandTotalLabel.setFont(grandTotalFont);
+		grandTotalLabel.setTextFill(Color.WHITE);
+		
+		Label grandTotalScore = new Label("" + game.getCurrentPlayer().getScorecard().getGrandTotal());
+		//grandTotalScore.setPrefSize(centreColumnWidth, rowHeight);
+		grandTotalScore.setFont(grandTotalFont);
+		grandTotalScore.setAlignment(Pos.CENTER);
+		grandTotalScore.setTextFill(Color.WHITE);
+		
 		Label grandTotalDescription = new Label("");
 		grandTotalDescription.setPrefSize(rightColumnWidth, rowHeight);
 		grandTotalDescription.setFont(grandTotalFont);
 		grandTotalDescription.setTextFill(Color.WHITE);
 		
-		lowerTotalDescriptions.getChildren().addAll(lowerSubTotalDescription,lowerBonusYahtzeesDescription,lowerBonusDescription,lowerTotalDescription,grandTotalDescription);
+		grandTotals.getChildren().addAll(grandTotalLabel,grandTotalScore);
+		scoreCardPane.getChildren().add(grandTotals);
 		
-		
-		lowerTotals.getChildren().addAll(lowerTotalLabels,lowerTotalScores,lowerTotalDescriptions);
-		lowerSection.getChildren().add(lowerTotals);
-		
-		
-		scoreCardPane.getChildren().add(lowerSection);
 	}
 	
 	private void createPlayersPane() {
@@ -582,8 +610,10 @@ public class GUI {
 	}
 
 	public Object[][] getPlayerDetails() {
+		/*
 		setNumberOfPlayers();
 		setPlayerDetails();
+		*/
 		return playerDetails;
 	}
 	
