@@ -1,6 +1,5 @@
 package main;
 
-import dice.DieColour;
 import gui.GUI;
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -18,12 +17,12 @@ public class Main extends Application {
 		stage.setX(150);
 		stage.setY(0);
 		stage.setTitle("YAHTZEE!");
-		startGame(stage);		
+		startGame();		
 	}
 	
-	public static void startGame(Stage stage) {
+	public static void startGame() {
 		GUI gui = new GUI();
-		Game game = new Game(gui.getPlayerDetails());
+		Game game = new Game(gui.getPlayerDetails(),gui);
 		gui.setGame(game);
 		gui.constructWindow();
 	}

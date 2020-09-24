@@ -4,7 +4,7 @@ import dice.Dice;
 import dice.DieColour;
 import scoring.ScoreCard;
 
-public class Player {
+public class Player implements Comparable<Player>{
 
 	private Dice dice;
 	private ScoreCard scorecard;
@@ -28,6 +28,10 @@ public class Player {
 		if(throwsRemaining == 0) {
 			dice.CancelHeldDice();
 		}
+	}
+	
+	public boolean isFinished() {
+		return scorecard.IsFinished();
 	}
 	
 	/*
@@ -61,6 +65,15 @@ public class Player {
 
 	public void setDieColour(DieColour dieColour) {
 		this.dieColour = dieColour;
+	}
+
+	public int compareTo(Player other) {
+		if(this.scorecard.getGrandTotal() != other.getScorecard().getGrandTotal()) {
+			return Integer.compare(other.getScorecard().getGrandTotal(), this.getScorecard().getGrandTotal());
+		}
+		else {
+			return this.getPlayerName().compareTo(other.getPlayerName());
+		}
 	}
 	
 	

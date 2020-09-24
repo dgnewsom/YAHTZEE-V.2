@@ -2,6 +2,9 @@ package gui;
 
 
 
+import java.util.ArrayList;
+import java.util.Collections;
+
 import dice.Dice;
 import dice.Die;
 import dice.DieButton;
@@ -71,17 +74,18 @@ public class GUI {
 	private Font titleFont = new Font("Arial", 15);
 	private Font descriptionFont = new Font("Arial", 15);
 	private Font scoreButtonFont = new Font("Arial Bold",15);
-	private Font grandTotalFont = new Font("Arial Bold", 30);
+	private Font grandTotalFont = new Font("Arial Bold", 20);
 	
 	//Players pane
-	private Font scoreAreaNamesFont = new Font("Arial Bold", 30);
+	private Font scoreAreaNamesFont = new Font("Arial Bold", 25);
 	
 	/*
 	 * Menu Fields
 	 */
 	private MenuBar menu;
 	private Menu file;
-	private Menu players;
+	private Menu diceColours;
+	private Menu viewScores;
 	
 	/*
 	 * Dice pane fields
@@ -138,8 +142,6 @@ public class GUI {
 	private HBox grandTotals;
 
 	
-	
-	
 	public void constructWindow() {
 		
 		root = new BorderPane();
@@ -147,9 +149,7 @@ public class GUI {
 		createDicePane();
 		createScorePane();
 		createPlayersPane();
-		
-		
-		
+				
 		HBox gamePane = new HBox() ;
 		gamePane.getChildren().addAll(dicePane,scoreCardPane);
 		
@@ -162,6 +162,7 @@ public class GUI {
 		Main.getStage().setScene(scene);
 		Main.getStage().sizeToScene();
 		Main.getStage().show();
+		
 	}
 
 	private void createMenuBar() {
@@ -169,7 +170,7 @@ public class GUI {
 		
 		file = new Menu("_File");
 		MenuItem newGame = new MenuItem("_New");
-		newGame.setOnAction(e->{Main.startGame(Main.getStage());});
+		newGame.setOnAction(e->{Main.startGame();});
 		newGame.setAccelerator(new KeyCodeCombination(KeyCode.N,KeyCombination.CONTROL_DOWN));
 		
 		/*
@@ -182,15 +183,11 @@ public class GUI {
 		
 		file.getItems().addAll(newGame);
 		
-		players = new Menu("Player Details");
+		diceColours = new Menu("Change Dice _Colours");
 		
 		for(Player player : game.getPlayers()) {
-			Menu playerMenu = new Menu(player.getPlayerName());
+			Menu playerMenu = new Menu(String.format("Change %s's dice colour", player.getPlayerName()));
 			
-			MenuItem scoreCard = new MenuItem(String.format("Display %s's scorecard", player.getPlayerName()));
-			scoreCard.setOnAction(e->{displayScorecard(player);});
-			
-			Menu colours = new Menu(String.format("Change %s's dice colour", player.getPlayerName()));
 			for(DieColour colour : DieColour.values()) {
 				MenuItem colourMenuItem = new MenuItem("");
 				colourMenuItem.setGraphic(new ImageView(String.format("/images/dice/Menu/%s.png",colour.getDescriptionName())));
@@ -198,14 +195,25 @@ public class GUI {
 					player.setDieColour(colour);
 					constructWindow();
 				});
-				colours.getItems().add(colourMenuItem);
+				playerMenu.getItems().add(colourMenuItem);
 			}
 			
-			playerMenu.getItems().addAll(scoreCard,colours);
-			players.getItems().add(playerMenu);
+			diceColours.getItems().add(playerMenu);
 		}
 		
-		menu.getMenus().addAll(file,players);
+		viewScores = new Menu("View _Scores");
+		viewScores.setAccelerator(new KeyCodeCombination(KeyCode.S,KeyCombination.CONTROL_DOWN));
+		
+		MenuItem viewAllScores = new MenuItem("View _All");
+		viewAllScores.setOnAction(e->{displayAllScores(false);});
+		viewScores.getItems().add(viewAllScores);
+		
+		for(Player player : game.getPlayers()) {
+		MenuItem scoreCard = new MenuItem(String.format("Display %s's scorecard", player.getPlayerName()));
+		scoreCard.setOnAction(e->{displayPlayerScorecard(player);});
+		viewScores.getItems().add(scoreCard);
+		}
+		menu.getMenus().addAll(file,diceColours,viewScores);
 		
 	}
 
@@ -235,7 +243,7 @@ public class GUI {
 		rollNumber.setFont(dicePaneFont);
 		rollNumber.setAlignment(Pos.CENTER);
 		rollNumber.setTextFill(Color.WHITE);
-		if(game.getCurrentPlayer().getThrowsRemaining()<=0) {
+		if(game.getCurrentPlayer().getThrowsRemaining()<=0 || game.isGameOver()) {
 			rollNumber.setVisible(false);
 		}
 		
@@ -355,7 +363,7 @@ public class GUI {
 				game.nextPlayer();
 				constructWindow();
 			});
-			if(game.getCurrentPlayer().getScorecard().getCategoryScore(category) != null) {
+			if(game.getCurrentPlayer().getScorecard().getCategoryScore(category) != null || game.getCurrentPlayer().getThrowsRemaining() >=3) {
 				submit.setVisible(false);
 			}
 			upperCategoryLabels.getChildren().add(name);
@@ -485,7 +493,7 @@ public class GUI {
 				game.nextPlayer();
 				constructWindow();
 			});
-			if(game.getCurrentPlayer().getScorecard().getCategoryScore(category) != null) {
+			if(game.getCurrentPlayer().getScorecard().getCategoryScore(category) != null || game.getCurrentPlayer().getThrowsRemaining()>=3) {
 				submit.setVisible(false);
 			}
 			lowerCategoryLabels.getChildren().add(name);
@@ -609,10 +617,10 @@ public class GUI {
 		playerBorder.setPadding(new Insets(0,5,5,5));
 		playerBorder.setBackground(greenBackground);
 		
-		playerPane = new TilePane(Orientation.VERTICAL,5,5);
+		playerPane = new TilePane(Orientation.VERTICAL,0,0);
 		playerPane.setPrefRows(2);
 		playerPane.setAlignment(Pos.CENTER);
-		playerPane.setPadding(new Insets(10));
+		playerPane.setPadding(new Insets(5));
 		playerPane.setBackground(greenBackground);
 		playerPane.setBorder(new Border(new BorderStroke(Color.WHITE, BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
 		
@@ -638,19 +646,19 @@ public class GUI {
 		playerBorder.getChildren().add(playerPane);
 	}
 	
-	
 	public void setGame(Game game) {
 		this.game = game;
 	}
 
 	public Object[][] getPlayerDetails() {
-		/*
+		
 		setNumberOfPlayers();
 		setPlayerDetails();
-		*/
+		
 		return playerDetails;
 	}
 	
+	@SuppressWarnings("unused")
 	private void setPlayerDetails() {
 		
 		playerDetails = new Object[2][Main.getNumberOfPlayers()];
@@ -768,6 +776,7 @@ public class GUI {
         
 	}
 
+	@SuppressWarnings("unused")
 	private void setNumberOfPlayers() {
 		/*
 		 * Create observable list from 1 - 10 for the spinner on the dialog
@@ -842,7 +851,306 @@ public class GUI {
         dialog.showAndWait();
 	}
 	
-	private void displayScorecard(Player player) {
-		System.out.println(String.format("%s's Scorcard displayed", player.getPlayerName()));
+	public void displayAllScores(boolean gameOver) {
+
+		/*
+		 * Create and initialise the popup window
+		 */
+        final Stage dialog = new Stage();
+        dialog.setTitle("Scores");
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.initOwner(Main.getStage());
+        //dialog.getIcons().add(new Image(Images.ICON.getImage()));
+        dialog.setMaximized(true);
+        //dialog.setWidth(310);
+        dialog.setResizable(false);
+        dialog.setOnCloseRequest(e->{
+        	if(gameOver) {
+        	constructWindow();
+        	rollButton.setDisable(true);}
+        	});
+        
+        BorderPane rootPane = new BorderPane();
+        rootPane.setPadding(new Insets(15));
+        
+        FlowPane titlePane = new FlowPane();
+        titlePane.setAlignment(Pos.CENTER);
+        Label titleLabel;
+        if(gameOver) {
+			 titleLabel = new Label("Game Over!");
+		}
+        else {
+        	titleLabel = new Label("Current Scores");
+        }
+        titleLabel.setFont(dicePaneFont);
+		titleLabel.setAlignment(Pos.CENTER);
+		titlePane.getChildren().add(titleLabel);
+		rootPane.setTop(titlePane);
+        
+        FlowPane scoresPane = new FlowPane();
+        scoresPane.setAlignment(Pos.CENTER);
+        TilePane scores = new TilePane(Orientation.HORIZONTAL,20,20);
+        scoresPane.getChildren().add(scores);
+        
+        scores.setPrefRows(2);
+        scores.setAlignment(Pos.CENTER);
+        
+       
+        for(Player player : game.getPlayers()) {
+        	scores.getChildren().add(getScorecard(player));
+        }
+        rootPane.setLeft(scoresPane);
+        
+        FlowPane container = new FlowPane(getLeaderBoard());
+        container.setAlignment(Pos.CENTER);
+        rootPane.setRight(container);
+        
+      //create and set scene and add to main window
+        Scene dialogScene = new Scene(rootPane);
+        dialog.setScene(dialogScene);
+        dialog.show();
+		//constructWindow();
 	}
+	
+	private void displayPlayerScorecard(Player player) {
+		/*
+		 * Create and initialise the popup window
+		 */
+        final Stage dialog = new Stage();
+        TilePane rootPane = new TilePane();
+        rootPane.setAlignment(Pos.CENTER);
+        dialog.setTitle(String.format("%s's Scorecard",player.getPlayerName()));
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.initOwner(Main.getStage());
+        //dialog.getIcons().add(new Image(Images.ICON.getImage()));
+        dialog.setHeight(510);
+        dialog.setWidth(310);
+        dialog.setResizable(false);
+        rootPane.getChildren().add(getScorecard(player));
+
+      //create and set scene and add to main window
+        Scene dialogScene = new Scene(rootPane, 500, 40);
+        dialog.setScene(dialogScene);
+        dialog.show();
+	}
+
+	private VBox getScorecard(Player player) {
+		
+		player.getScorecard().Calculate();
+		
+		Font titleFont = new Font("Arial Bold", 18);
+		Font totalFont = new Font("Arial Bold", 12);
+		Font scoreFont = new Font("Arial", 12);
+		
+		int leftColumnWidth = 150;
+		int rightColumnWidth = 10;
+		int rowHeight = 20;
+	    VBox result = new VBox(3);
+	    result.setPadding(new Insets(3));
+	    result.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, new CornerRadii(5), new BorderWidths(2))));
+	    result.setAlignment(Pos.CENTER);
+	    result.setPrefHeight(100);
+	    
+	    Label playerName = new Label(String.format("%s's Scorecard",player.getPlayerName()));
+	    playerName.setFont(titleFont);
+	    
+	    /*
+	     * Upper Section
+	     */
+	    VBox upperSection = new VBox();
+	    upperSection.setPadding(new Insets(5));
+	    upperSection.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, new CornerRadii(0), new BorderWidths(2))));
+	    upperSection.setAlignment(Pos.CENTER);
+	    Label upperLabel = new Label("Upper Section");
+	    upperLabel.setFont(titleFont);
+	    upperLabel.setAlignment(Pos.CENTER);
+	    HBox upper = new HBox();
+	    upper.setPadding(new Insets(5));
+	    upper.setAlignment(Pos.CENTER);
+	    VBox upperLabels = new VBox(0);
+	    upperLabels.setPadding(new Insets(0,0,0,10));
+	    VBox upperScores = new VBox(0);
+	    for(Category category : game.getCurrentPlayer().getScorecard().getUpperCategories()) {
+	    	
+			Label name = new Label(category.getDescriptionName());
+			name.setPrefSize(leftColumnWidth, rowHeight);
+			name.setFont(scoreFont);
+			
+			Label score = new Label("---");
+			score.setPrefSize(rightColumnWidth, rowHeight);
+			if(player.getScorecard().getCategoryScore(category) != null) {
+				score = new Label(String.format("%d", player.getScorecard().getCategoryScore(category)));
+			}
+			score.setPrefSize(centreColumnWidth, rowHeight);
+			score.setAlignment(Pos.CENTER);
+			score.setFont(scoreFont);
+			
+			upperLabels.getChildren().add(name);
+			upperScores.getChildren().add(score);
+	    }
+	    Label upperSubtotalLabel = new Label("Upper Subtotal");
+	    upperSubtotalLabel.setPrefSize(leftColumnWidth, rowHeight);
+	    upperSubtotalLabel.setFont(totalFont);
+	    Label upperSubTotalScore = new Label(String.format("" + player.getScorecard().getUpperSubTotal()));
+	    upperSubTotalScore.setPrefSize(centreColumnWidth, rowHeight);
+		upperSubTotalScore.setAlignment(Pos.CENTER);
+		upperSubTotalScore.setFont(totalFont);
+	    Label upperBonusLabel = new Label("Bonus");
+	    upperBonusLabel.setPrefSize(leftColumnWidth, rowHeight);
+	    upperBonusLabel.setFont(totalFont);
+	    Label upperBonusScore = new Label(String.format("" + player.getScorecard().getUpperBonus()));
+	    upperBonusScore.setPrefSize(centreColumnWidth, rowHeight);
+		upperBonusScore.setAlignment(Pos.CENTER);
+		upperBonusScore.setFont(totalFont);
+	    Label upperTotalLabel = new Label("Upper Total");
+	    upperTotalLabel.setPrefSize(leftColumnWidth, rowHeight);
+	    upperTotalLabel.setFont(totalFont);
+	    Label upperTotalScore = new Label(String.format("" + player.getScorecard().getUpperTotal()));
+	    upperTotalScore.setPrefSize(centreColumnWidth, rowHeight);
+		upperTotalScore.setAlignment(Pos.CENTER);
+		upperTotalScore.setFont(totalFont);
+	    
+	    upperLabels.getChildren().addAll(upperSubtotalLabel,upperBonusLabel,upperTotalLabel);
+	    upperScores.getChildren().addAll(upperSubTotalScore,upperBonusScore,upperTotalScore);
+	    
+	    upper.getChildren().addAll(upperLabels,upperScores);
+	    
+	    upperSection.getChildren().addAll(upperLabel,upper);
+	    
+	    /*
+	     * Lower Section
+	     */
+	    VBox lowerSection = new VBox();
+	    lowerSection.setPadding(new Insets(5));
+	    lowerSection.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, new CornerRadii(0), new BorderWidths(2))));
+	    lowerSection.setAlignment(Pos.CENTER);
+	    Label lowerLabel = new Label("Lower Section");
+	    lowerLabel.setFont(titleFont);
+	    lowerLabel.setAlignment(Pos.CENTER);
+	    HBox lower = new HBox();
+	    lower.setPadding(new Insets(5));
+	    lower.setAlignment(Pos.CENTER);
+	    VBox lowerLabels = new VBox(0);
+	    lowerLabels.setPadding(new Insets(0,0,0,10));
+	    VBox lowerScores = new VBox(0);
+	    for(Category category : game.getCurrentPlayer().getScorecard().getLowerCategories()) {
+	    	
+			Label name = new Label(category.getDescriptionName());
+			name.setPrefSize(leftColumnWidth, rowHeight);
+			name.setFont(scoreFont);
+			
+			Label score = new Label("---");
+			score.setPrefSize(rightColumnWidth, rowHeight);
+			if(player.getScorecard().getCategoryScore(category) != null) {
+				score = new Label(String.format("%d", player.getScorecard().getCategoryScore(category)));
+			}
+			score.setPrefSize(centreColumnWidth, rowHeight);
+			score.setAlignment(Pos.CENTER);
+			score.setFont(scoreFont);
+			
+			lowerLabels.getChildren().add(name);
+			lowerScores.getChildren().add(score);
+	    }
+	    Label lowerSubtotalLabel = new Label("Lower Subtotal");
+	    lowerSubtotalLabel.setPrefSize(leftColumnWidth, rowHeight);
+	    lowerSubtotalLabel.setFont(totalFont);
+	    Label lowerSubTotalScore = new Label(String.format("" + player.getScorecard().getLowerSubTotal()));
+	    lowerSubTotalScore.setPrefSize(centreColumnWidth, rowHeight);
+		lowerSubTotalScore.setAlignment(Pos.CENTER);
+		lowerSubTotalScore.setFont(totalFont);
+		Label lowerBonusYahtzeesLabel = new Label("Bonus Yahtzees");
+	    lowerBonusYahtzeesLabel.setPrefSize(leftColumnWidth, rowHeight);
+	    lowerBonusYahtzeesLabel.setFont(totalFont);
+	    Label lowerBonusYahtzeesScore = new Label(String.format("" + player.getScorecard().getBonusYahtzees()));
+	    lowerBonusYahtzeesScore.setPrefSize(centreColumnWidth, rowHeight);
+		lowerBonusYahtzeesScore.setAlignment(Pos.CENTER);
+		lowerBonusYahtzeesScore.setFont(totalFont);
+	    Label lowerBonusLabel = new Label("Bonus Score");
+	    lowerBonusLabel.setPrefSize(leftColumnWidth, rowHeight);
+	    lowerBonusLabel.setFont(totalFont);
+	    Label lowerBonusScore = new Label(String.format("" + player.getScorecard().getLowerBonus()));
+	    lowerBonusScore.setPrefSize(centreColumnWidth, rowHeight);
+		lowerBonusScore.setAlignment(Pos.CENTER);
+		lowerBonusScore.setFont(totalFont);
+	    Label lowerTotalLabel = new Label("Lower Total");
+	    lowerTotalLabel.setPrefSize(leftColumnWidth, rowHeight);
+	    lowerTotalLabel.setFont(totalFont);
+	    Label lowerTotalScore = new Label(String.format("" + player.getScorecard().getLowerTotal()));
+	    lowerTotalScore.setPrefSize(centreColumnWidth, rowHeight);
+		lowerTotalScore.setAlignment(Pos.CENTER);
+		lowerTotalScore.setFont(totalFont);
+	    
+	    lowerLabels.getChildren().addAll(lowerSubtotalLabel,lowerBonusLabel,lowerBonusYahtzeesLabel,lowerTotalLabel);
+	    lowerScores.getChildren().addAll(lowerSubTotalScore,lowerBonusScore,lowerBonusYahtzeesScore,lowerTotalScore);
+	    
+	    lower.getChildren().addAll(lowerLabels,lowerScores);
+	    
+	    lowerSection.getChildren().addAll(lowerLabel,lower);
+	    
+	    Label grandTotal = new Label(String.format("Grand Total %d",player.getScorecard().getGrandTotal()));
+	    grandTotal.setFont(titleFont);
+	    
+	    result.getChildren().addAll(playerName,upperSection,lowerSection,grandTotal);
+		return result;
+	}
+	
+	private FlowPane getLeaderBoard() {
+		
+		ArrayList<Player> leaderBoard = new ArrayList<Player>();
+		for(Player player : game.getPlayers()) {
+			player.getScorecard().Calculate();
+			leaderBoard.add(player);
+		}
+		Collections.sort(leaderBoard);
+		
+		Font titleFont = new Font("Arial Bold", 20);
+		Font totalFont = new Font("Arial Bold", 15);
+		
+		int leftColumnWidth = 30;
+		int centreColumnWidth = 200;
+		int rightColumnWidth = 30;
+		int rowHeight = 20;
+		
+	    FlowPane result = new FlowPane(Orientation.VERTICAL,3,3);
+	    result.setPadding(new Insets(3));
+	    result.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, new CornerRadii(5), new BorderWidths(2))));
+	    result.setAlignment(Pos.TOP_CENTER );
+	    //result.setPrefHeight(50);
+	    
+	    Label title = new Label("LeaderBoard");
+	    title.setFont(titleFont);
+	    title.setAlignment(Pos.CENTER);
+	    
+	    HBox scoreBoard = new HBox();
+	    scoreBoard.setPadding(new Insets(5));
+	    scoreBoard.setAlignment(Pos.CENTER);
+	    VBox numbers = new VBox(5);
+	    VBox names = new VBox(5);
+	    VBox scores = new VBox(5);
+	    
+	    int number = 0;
+	    
+	    for(Player player : leaderBoard) {
+	    	
+	    	number ++;
+	    	Label numberLabel = new Label("" + number);
+	    	numberLabel.setPrefSize(leftColumnWidth, rowHeight);
+	    	numberLabel.setFont(totalFont);
+	    	Label nameLabel = new Label(player.getPlayerName());
+	    	nameLabel.setPrefSize(centreColumnWidth, rowHeight);
+			nameLabel.setFont(totalFont);
+	    	Label scoreLabel = new Label(""+player.getScorecard().getGrandTotal());
+	    	scoreLabel.setPrefSize(rightColumnWidth, rowHeight);
+			scoreLabel.setFont(totalFont);
+			
+	    	numbers.getChildren().add(numberLabel);
+	    	names.getChildren().add(nameLabel);
+	    	scores.getChildren().add(scoreLabel);
+	    }
+	    scoreBoard.getChildren().addAll(numbers,names,scores);
+	    
+	    result.getChildren().addAll(title,scoreBoard);
+	    return result;
+	}
+	
 }
