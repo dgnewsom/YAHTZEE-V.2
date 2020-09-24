@@ -1,5 +1,6 @@
 package main;
 
+import dice.DieColour;
 import gui.GUI;
 import player.Player;
 
@@ -11,16 +12,15 @@ public class Game {
 
 	GUI gui;
 	
-	public Game(String[] playerNames) {
-		players = new Player[playerNames.length];
-		for (int i = 0; i < playerNames.length; i++) {
-			players[i] = new Player(playerNames[i]);
+	public Game(Object[][] playerDetails) {
+		players = new Player[playerDetails[0].length];
+		for (int i = 0; i < playerDetails[0].length; i++) {
+			players[i] = new Player((String)playerDetails[0][i],(DieColour)playerDetails[1][i]);
 		}
 		currentPlayerIndex = 0;
 		currentPlayer = players[currentPlayerIndex];
-		
 	}
-	
+
 	public void nextPlayer() {
 		if(currentPlayerIndex == players.length-1) {
 			currentPlayerIndex = 0;

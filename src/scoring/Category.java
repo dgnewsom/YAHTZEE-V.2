@@ -86,7 +86,6 @@ public enum Category {
 			checkArray = new boolean[6];
 			
 			for (int diceInt : diceArr) {
-				System.out.println(diceInt);
 				checkArray[diceInt-1] = true;
 			}
 			if((checkArray[0]&&checkArray[1]&&checkArray[2]&&checkArray[3])||
@@ -99,7 +98,6 @@ public enum Category {
 			checkArray = new boolean[6];
 			
 			for (int diceInt : diceArr) {
-				System.out.println(diceInt);
 				checkArray[diceInt-1] = true;
 			}
 			if((checkArray[0]&&checkArray[1]&&checkArray[2]&&checkArray[3]&&checkArray[4])||

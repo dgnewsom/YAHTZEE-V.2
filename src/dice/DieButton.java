@@ -13,9 +13,9 @@ public class DieButton extends Button {
 		this.die = die;
 	}
 	
-	public void setImage() {
+	public void setImage(DieColour dieColour) {
 		String imagePathString = "images/dice/";
-		imagePathString += "white/";
+		imagePathString += dieColour.getDescriptionName() + "/";
 		if(die.isHeld()) {
 			imagePathString += "held/";
 		}

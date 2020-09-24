@@ -1,6 +1,7 @@
 package player;
 
 import dice.Dice;
+import dice.DieColour;
 import scoring.ScoreCard;
 
 public class Player {
@@ -9,12 +10,14 @@ public class Player {
 	private ScoreCard scorecard;
 	private String playerName;
 	private int throwsRemaining;
+	private DieColour dieColour;
 
-	public Player(String name) {
+	public Player(String name, DieColour dieColour) {
 		dice = new Dice();
 		scorecard = new ScoreCard();
 		playerName = name;
 		throwsRemaining = 2;
+		this.dieColour = dieColour;
 	}
 
 	public void RollDice() {
@@ -50,6 +53,15 @@ public class Player {
 	public void resetThrowsRemaining() {
 		RollDice();
 		throwsRemaining = 2;
-		
 	}
+
+	public DieColour getDieColour() {
+		return dieColour;
+	}
+
+	public void setDieColour(DieColour dieColour) {
+		this.dieColour = dieColour;
+	}
+	
+	
 }
