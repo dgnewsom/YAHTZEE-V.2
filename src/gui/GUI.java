@@ -5,11 +5,13 @@ package gui;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.Random;
 
 import dice.Dice;
 import dice.Die;
 import dice.DieButton;
 import dice.DieColour;
+import javafx.animation.AnimationTimer;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -140,21 +142,54 @@ public class GUI {
 	private TilePane lowerTotalLabels;
 	private TilePane lowerTotalScores;
 	private TilePane lowerTotalDescriptions;
-	
+	private HBox grandTotals;
 	
 	/*
 	 * Player pane fields
 	 */
 	private FlowPane playerBorder;
 	private TilePane playerPane;
-	private HBox grandTotals;
+	
+	
+	/*
+	 * dice animation fields
+	 */
+	private Dice diceAnimationDice = new Dice();
+	private int frameNumber;  
+	private AnimationTimer timer = new AnimationTimer() {
+
+		public void handle(long time ) {
+			
+			Random rand = new Random();
+			int[] animationDieArr = new int[5];
+			Die[] dieArr = game.getCurrentPlayer().getDice().getDieArray(); 
+			
+			for (int i = 0; i < dieArr.length; i++) {
+				if(dieArr[i].isHeld()) {
+					animationDieArr[i] = dieArr[i].getCurrentValue();
+				}
+				else {
+					animationDieArr[i] = rand.nextInt(6)+1;
+				}
+			}
+			
+			diceAnimationDice = new Dice(animationDieArr);
+			constructWindow(true);
+			frameNumber++;
+			if (frameNumber == 40) {
+				timer.stop();
+				rollButton.setVisible(true);
+				constructWindow(false);
+			}
+		}
+	};
 
 	
-	public void constructWindow() {
+	public void constructWindow(boolean rolling) {
 		
 		root = new BorderPane();
 		createMenuBar();
-		createDicePane();
+		createDicePane(rolling);
 		createScorePane();
 		createPlayersPane();
 				
@@ -206,7 +241,7 @@ public class GUI {
 				colourMenuItem.setGraphic(new ImageView(String.format("/images/dice/Menu/%s.png",colour.getDescriptionName())));
 				colourMenuItem.setOnAction(e->{
 					player.setDieColour(colour);
-					constructWindow();
+					constructWindow(false);
 				});
 				playerMenu.getItems().add(colourMenuItem);
 			}
@@ -249,7 +284,7 @@ public class GUI {
 		
 	}
 
-	private void createDicePane() {
+	private void createDicePane(boolean rolling) {
 		
 		dicePane = new TilePane(Orientation.VERTICAL);
 		dicePane.setAlignment(Pos.CENTER);
@@ -296,23 +331,7 @@ public class GUI {
 		
 		diceButtons = new TilePane(Orientation.HORIZONTAL, 0, 0);
 		diceButtons.setPrefColumns(5);
-		
-		Dice dice = game.getCurrentPlayer().getDice(); 
-		for(Die die : dice.getDieArray()) {
-			DieButton temp = new DieButton(die);
-			temp.setFont(dicePaneFont);
-			temp.setPrefWidth(100);
-			temp.setPrefHeight(100);
-			temp.setImage(game.getCurrentPlayer().getDieColour());
-			temp.setBackground(null);
-			temp.setOnMouseClicked(e->{if(game.getCurrentPlayer().getThrowsRemaining() > 0)
-									   temp.Click(e);
-									   constructWindow();});
-			diceButtons.getChildren().add(temp);
-		}
-		if(game.getCurrentPlayer().getThrowsRemaining()>=3) {
-			diceButtons.setVisible(false);
-		}
+		diceButtons.setAlignment(Pos.CENTER);
 		
 		rollButton = new Button("Roll Dice");
 		rollButton.setFont(dicePaneFont);
@@ -321,14 +340,60 @@ public class GUI {
 		if(game.getCurrentPlayer().getThrowsRemaining() < 1) {
        	 	rollButton.setDisable(true);
         }
+		
+		if(rolling) {
+			Dice dice = diceAnimationDice; 
+			for(Die die : dice.getDieArray()) {
+				DieButton temp = new DieButton(die);
+				temp.setPrefWidth(100);
+				temp.setPrefHeight(100);
+				temp.setImage(game.getCurrentPlayer().getDieColour());
+				temp.setBackground(null);
+				temp.setOnMouseClicked(e->{if(game.getCurrentPlayer().getThrowsRemaining() > 0)
+					   temp.Click(e);
+					   constructWindow(false);});
+				diceButtons.getChildren().add(temp);
+			}
+			rollButton.setDisable(true);
+		}
+		else {
+			Dice dice = game.getCurrentPlayer().getDice(); 
+			for(Die die : dice.getDieArray()) {
+				DieButton temp = new DieButton(die);
+				temp.setPrefWidth(100);
+				temp.setPrefHeight(100);
+				temp.setImage(game.getCurrentPlayer().getDieColour());
+				temp.setBackground(null);
+				temp.setOnMouseClicked(e->{if(game.getCurrentPlayer().getThrowsRemaining() > 0)
+					   temp.Click(e);
+					   constructWindow(false);});
+				diceButtons.getChildren().add(temp);
+			}
+			if(game.getCurrentPlayer().getThrowsRemaining()>=3) {
+				diceButtons.setVisible(false);
+			}
+		}
+		
 		rollButton.setOnMouseClicked(e->{game.getCurrentPlayer().RollDice();
-		                                 constructWindow();
+										 rollingAnimation();
+		                                 constructWindow(false);
 		                                 
 		});
 		
 		dicePane.getChildren().addAll(rollNumber,throwsRemaining, diceButtons, rollButton);
 	}
 	
+	private void rollingAnimation(){
+		
+		
+		frameNumber = 0;
+	       rollButton.setVisible(false);
+	       constructWindow(true);
+	       timer.start();
+	}
+		
+	
+
 	private void createScorePane() {
 		
 		scoreCardPane = new VBox(10);
@@ -393,7 +458,7 @@ public class GUI {
 				game.getCurrentPlayer().getDice().CancelHeldDice();
 				game.getCurrentPlayer().getDice().RollDice();
 				game.nextPlayer();
-				constructWindow();
+				constructWindow(false);
 			});
 			if(game.getCurrentPlayer().getScorecard().getCategoryScore(category) != null || game.getCurrentPlayer().getThrowsRemaining() >=3) {
 				submit.setVisible(false);
@@ -523,7 +588,7 @@ public class GUI {
 				game.getCurrentPlayer().getScorecard().setScore(game.getCurrentPlayer().getDice(), category);
 				game.getCurrentPlayer().getScorecard().Calculate();
 				game.nextPlayer();
-				constructWindow();
+				constructWindow(false);
 			});
 			if(game.getCurrentPlayer().getScorecard().getCategoryScore(category) != null || game.getCurrentPlayer().getThrowsRemaining()>=3) {
 				submit.setVisible(false);
@@ -690,6 +755,78 @@ public class GUI {
 		return playerDetails;
 	}
 	
+	private void setNumberOfPlayers() {
+		/*
+		 * Create observable list from 1 - 10 for the spinner on the dialog
+		 */
+		Integer[] range = new Integer[10];
+		for (int i = 0; i < range.length; i++) {
+			range[i] = i+1;
+		}
+		ObservableList<Integer> rangeList = FXCollections.observableArrayList(range);
+		
+		/*
+		 * Create and initialise the popup window
+		 */
+        final Stage dialog = new Stage();
+        BorderPane rootPane = new BorderPane();
+        dialog.setTitle("How Many Players?");
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.initOwner(Main.getStage());
+        //dialog.getIcons().add(new Image(Images.ICON.getImage()));
+        dialog.setResizable(false);
+        dialog.setOnCloseRequest(e->{System.exit(0);});
+		
+        /*
+		 * Create and initialise title pane for the popup        
+		 */
+        HBox selectionPane = new HBox(10);
+        selectionPane.setAlignment(Pos.CENTER);
+        selectionPane.setPadding(new Insets(75));
+        Label titleLabel = new Label("Please select the number of players:");
+        titleLabel.setFont(new Font("Arial Bold",20));
+        titleLabel.setTextAlignment(TextAlignment.CENTER);
+        selectionPane.getChildren().add(titleLabel);
+        
+        /*
+         * Create Combobox
+         */
+        ComboBox<Integer> playersComboBox = new ComboBox<Integer>(rangeList);
+        playersComboBox.setValue(1);
+        selectionPane.getChildren().add(playersComboBox);        
+        /*
+         * Create pane for the buttons 
+         */
+        TilePane buttons = new TilePane();
+        buttons.setPadding(new Insets(20));
+        buttons.setHgap(10);
+        BorderPane buttonsPane = new BorderPane();
+        
+        /*
+         * Create the buttons for applying the settings or cancelling
+         * and set event handlers
+         */
+        Button okButton = new Button("OK");
+        okButton.setMinWidth(75);
+        //Set event to set custom parameters close window and start new game
+        okButton.setOnMouseClicked(e->{Main.setNumberOfPlayers(playersComboBox.getValue());
+        							   dialog.close();});
+        
+        //add buttons to buttons pane
+        buttons.getChildren().addAll(okButton);
+        buttonsPane.setRight(buttons);;
+        
+        //Add three main panes to root pane
+        //rootPane.setTop(titlePane);
+        rootPane.setCenter(selectionPane);
+        rootPane.setBottom(buttonsPane);
+        
+        //create and set scene and add to main window
+        Scene dialogScene = new Scene(rootPane);
+        dialog.setScene(dialogScene);
+        dialog.showAndWait();
+	}
+	
 	private void setPlayerDetails() {
 		
 		playerDetails = new Object[2][Main.getNumberOfPlayers()];
@@ -709,26 +846,23 @@ public class GUI {
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.initOwner(Main.getStage());
         //dialog.getIcons().add(new Image(Images.ICON.getImage()));
-        dialog.setHeight((550));
-        dialog.setWidth(500);
         dialog.setResizable(false);
         dialog.setOnCloseRequest(e->{System.exit(0);});
 		
         /*
 		 * Create and initialise title pane for the popup        
 		 */
-        TilePane titlePane = new TilePane();
-        titlePane.setAlignment(Pos.CENTER);
+        FlowPane inputPane = new FlowPane();
+        inputPane.setAlignment(Pos.CENTER);
         Label titleLabel = new Label("Please enter each players name and die colour.");
-        titleLabel.setFont(new Font("Arial Bold",18));
+        titleLabel.setFont(new Font("Arial Bold",20));
         titleLabel.setTextAlignment(TextAlignment.CENTER);
-        titleLabel.setPadding(new Insets(30,0,30,0));
-        titlePane.getChildren().add(titleLabel);
-        
+        titleLabel.setPadding(new Insets(30));
+        inputPane.getChildren().add(titleLabel);
         /*
          * Create panes for each player input
          */
-        TilePane inputs = new TilePane(Orientation.VERTICAL,5,5);
+        VBox inputs = new VBox(5);
         inputs.setAlignment(Pos.CENTER);
         inputs.setPadding(new Insets(20));
         for (int i = 0; i < Main.getNumberOfPlayers(); i++) {
@@ -762,6 +896,7 @@ public class GUI {
 			playerInput.getChildren().addAll(nameInput,playerColour);
 			inputs.getChildren().add(playerInput);
 		}
+        inputPane.getChildren().add(inputs);
         
         /*
          * Create pane for the buttons 
@@ -796,89 +931,15 @@ public class GUI {
         buttonsPane.setRight(buttons);;
         
         //Add three main panes to root pane
-        rootPane.setTop(titlePane);
-        rootPane.setCenter(inputs);
+        
+        rootPane.setCenter(inputPane);
         rootPane.setBottom(buttonsPane);
         
         //create and set scene and add to main window
-        Scene dialogScene = new Scene(rootPane, 500, 40);
+        Scene dialogScene = new Scene(rootPane);
         dialog.setScene(dialogScene);
         dialog.showAndWait();
         
-	}
-	
-	private void setNumberOfPlayers() {
-		/*
-		 * Create observable list from 1 - 10 for the spinner on the dialog
-		 */
-		Integer[] range = new Integer[10];
-		for (int i = 0; i < range.length; i++) {
-			range[i] = i+1;
-		}
-		ObservableList<Integer> rangeList = FXCollections.observableArrayList(range);
-		
-		/*
-		 * Create and initialise the popup window
-		 */
-        final Stage dialog = new Stage();
-        BorderPane rootPane = new BorderPane();
-        dialog.setTitle("How Many Players?");
-        dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.initOwner(Main.getStage());
-        //dialog.getIcons().add(new Image(Images.ICON.getImage()));
-        dialog.setHeight(250);
-        dialog.setWidth(500);
-        dialog.setResizable(false);
-        dialog.setOnCloseRequest(e->{System.exit(0);});
-		
-        /*
-		 * Create and initialise title pane for the popup        
-		 */
-        TilePane titlePane = new TilePane();
-        titlePane.setAlignment(Pos.CENTER);
-        Label titleLabel = new Label("Please select the number of players");
-        titleLabel.setFont(new Font(18));
-        titleLabel.setTextAlignment(TextAlignment.CENTER);
-        titleLabel.setPadding(new Insets(15,0,15,0));
-        titlePane.getChildren().add(titleLabel);
-        
-        /*
-         * Create pane for the buttons 
-         */
-        TilePane buttons = new TilePane();
-        buttons.setPadding(new Insets(20));
-        buttons.setHgap(10);
-        BorderPane buttonsPane = new BorderPane();
-        
-        /*
-         * Create Combobox
-         */
-        ComboBox<Integer> playersComboBox = new ComboBox<Integer>(rangeList);
-        playersComboBox.setValue(1);
-        
-        /*
-         * Create the buttons for applying the settings or cancelling
-         * and set event handlers
-         */
-        Button okButton = new Button("OK");
-        okButton.setMinWidth(75);
-        //Set event to set custom parameters close window and start new game
-        okButton.setOnMouseClicked(e->{Main.setNumberOfPlayers(playersComboBox.getValue());
-        							   dialog.close();});
-        
-        //add buttons to buttons pane
-        buttons.getChildren().addAll(okButton);
-        buttonsPane.setRight(buttons);;
-        
-        //Add three main panes to root pane
-        rootPane.setTop(titlePane);
-        rootPane.setCenter(playersComboBox);
-        rootPane.setBottom(buttonsPane);
-        
-        //create and set scene and add to main window
-        Scene dialogScene = new Scene(rootPane, 500, 40);
-        dialog.setScene(dialogScene);
-        dialog.showAndWait();
 	}
 	
 	public void displayAllScores(boolean gameOver) {
@@ -896,7 +957,7 @@ public class GUI {
         //dialog.setResizable(false);
         dialog.setOnCloseRequest(e->{
         	if(gameOver) {
-        	constructWindow();
+        	constructWindow(false);
         	rollButton.setDisable(true);}
         	});
         

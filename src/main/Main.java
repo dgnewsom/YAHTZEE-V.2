@@ -27,7 +27,7 @@ public class Main extends Application {
 		GUI gui = new GUI();
 		Game game = new Game(gui.getPlayerDetails(),gui);
 		gui.setGame(game);
-		gui.constructWindow();
+		gui.constructWindow(false);
 	}
 	
 	public static void quitGame() {
