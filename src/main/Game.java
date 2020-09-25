@@ -3,6 +3,7 @@ package main;
 import dice.DieColour;
 import gui.GUI;
 import player.Player;
+import scoring.HighScores;
 
 public class Game {
 
@@ -20,6 +21,7 @@ public class Game {
 		currentPlayerIndex = 0;
 		currentPlayer = players[currentPlayerIndex];
 		this.gui = gui;
+		HighScores.importHighScoresFromFile();
 	}
 
 	public void nextPlayer() {
@@ -33,6 +35,9 @@ public class Game {
 		currentPlayer.resetThrowsRemaining();
 		currentPlayer.getDice().RollDice();
 		if(isFinished()) {
+			for(Player player : players) {
+				HighScores.checkHighScore(player);
+			}
 			gui.displayAllScores(true);
 		}
 	}

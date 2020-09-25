@@ -2,7 +2,9 @@ package main;
 
 import gui.GUI;
 import javafx.application.Application;
+import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Stage;
+import scoring.HighScores;
 
 public class Main extends Application {
 
@@ -17,6 +19,7 @@ public class Main extends Application {
 		stage.setX(150);
 		stage.setY(0);
 		stage.setTitle("YAHTZEE!");
+		stage.setOnCloseRequest(e->{HighScores.exportHighScoresToFile();});
 		startGame();		
 	}
 	
@@ -25,6 +28,14 @@ public class Main extends Application {
 		Game game = new Game(gui.getPlayerDetails(),gui);
 		gui.setGame(game);
 		gui.constructWindow();
+	}
+	
+	public static void quitGame() {
+		if(GUI.confirmDialog("Quit", "Quitting Game", "Are you sure?", AlertType.CONFIRMATION)) {
+			HighScores.exportHighScoresToFile();
+			System.exit(0);
+		}
+		
 	}
 
 	public static Stage getStage() {

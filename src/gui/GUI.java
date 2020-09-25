@@ -4,6 +4,7 @@ package gui;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Optional;
 
 import dice.Dice;
 import dice.Die;
@@ -15,7 +16,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -48,6 +52,8 @@ import main.Game;
 import main.Main;
 import player.Player;
 import scoring.Category;
+import scoring.HighScores;
+import scoring.Score;
 
 public class GUI {
 
@@ -60,6 +66,7 @@ public class GUI {
 	 */
 	private Background greenBackground = new Background(new BackgroundFill(Color.FORESTGREEN, CornerRadii.EMPTY, Insets.EMPTY));
 	private Background darkGreenBackground = new Background(new BackgroundFill(Color.DARKGREEN, CornerRadii.EMPTY, Insets.EMPTY));
+	private Background whiteBackground = new Background(new BackgroundFill(Color.WHITE, new CornerRadii(10), Insets.EMPTY));
 	
 	/*
 	 * Fonts
@@ -86,6 +93,7 @@ public class GUI {
 	private Menu file;
 	private Menu diceColours;
 	private Menu viewScores;
+	private Menu highScores;
 	
 	/*
 	 * Dice pane fields
@@ -169,9 +177,14 @@ public class GUI {
 		menu = new MenuBar();
 		
 		file = new Menu("_File");
+		
 		MenuItem newGame = new MenuItem("_New");
 		newGame.setOnAction(e->{Main.startGame();});
 		newGame.setAccelerator(new KeyCodeCombination(KeyCode.N,KeyCombination.CONTROL_DOWN));
+		
+		MenuItem quitGame = new MenuItem("_Quit");
+		quitGame.setOnAction(e->{Main.quitGame();});
+		quitGame.setAccelerator(new KeyCodeCombination(KeyCode.Q,KeyCombination.CONTROL_DOWN));
 		
 		/*
 		 * To Add=============================================================
@@ -181,7 +194,7 @@ public class GUI {
 		//load.setOnAction(e->{loadContacts();});
 		*/
 		
-		file.getItems().addAll(newGame);
+		file.getItems().addAll(newGame,quitGame);
 		
 		diceColours = new Menu("Change Dice _Colours");
 		
@@ -202,9 +215,14 @@ public class GUI {
 		}
 		
 		viewScores = new Menu("View _Scores");
-		viewScores.setAccelerator(new KeyCodeCombination(KeyCode.S,KeyCombination.CONTROL_DOWN));
 		
-		MenuItem viewAllScores = new MenuItem("View _All");
+		if(game.getPlayers().length > 1) {
+			MenuItem viewLeaderboard = new MenuItem("_LeaderBoard");
+			viewLeaderboard.setOnAction(e->{displayLeaderBoard();});
+			viewScores.getItems().add(viewLeaderboard);
+		}
+		
+		MenuItem viewAllScores = new MenuItem("_All Scores");
 		viewAllScores.setOnAction(e->{displayAllScores(false);});
 		viewScores.getItems().add(viewAllScores);
 		
@@ -213,7 +231,21 @@ public class GUI {
 		scoreCard.setOnAction(e->{displayPlayerScorecard(player);});
 		viewScores.getItems().add(scoreCard);
 		}
-		menu.getMenus().addAll(file,diceColours,viewScores);
+		
+		highScores = new Menu("_High Scores");
+		
+		MenuItem viewHighScores = new MenuItem("_View High Scores");
+		viewHighScores.setOnAction(e->{displayHighScores();});
+		highScores.getItems().add(viewHighScores);
+		
+		MenuItem clearHighScores = new MenuItem("_Clear High Scores");
+		clearHighScores.setOnAction(e->{
+			if(confirmDialog("Clear Scores","Clearing Scores...","Are You sure?",AlertType.CONFIRMATION)) {
+				HighScores.clearHighScores();
+			};});
+		highScores.getItems().add(clearHighScores);
+		
+		menu.getMenus().addAll(file,diceColours,viewScores,highScores);
 		
 	}
 
@@ -658,7 +690,6 @@ public class GUI {
 		return playerDetails;
 	}
 	
-	@SuppressWarnings("unused")
 	private void setPlayerDetails() {
 		
 		playerDetails = new Object[2][Main.getNumberOfPlayers()];
@@ -775,8 +806,7 @@ public class GUI {
         dialog.showAndWait();
         
 	}
-
-	@SuppressWarnings("unused")
+	
 	private void setNumberOfPlayers() {
 		/*
 		 * Create observable list from 1 - 10 for the spinner on the dialog
@@ -861,9 +891,9 @@ public class GUI {
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.initOwner(Main.getStage());
         //dialog.getIcons().add(new Image(Images.ICON.getImage()));
-        dialog.setMaximized(true);
+        //dialog.setMaximized(true);
         //dialog.setWidth(310);
-        dialog.setResizable(false);
+        //dialog.setResizable(false);
         dialog.setOnCloseRequest(e->{
         	if(gameOver) {
         	constructWindow();
@@ -871,10 +901,12 @@ public class GUI {
         	});
         
         BorderPane rootPane = new BorderPane();
-        rootPane.setPadding(new Insets(15));
+        rootPane.setPadding(new Insets(5));
+        rootPane.setBackground(greenBackground);
         
         FlowPane titlePane = new FlowPane();
         titlePane.setAlignment(Pos.CENTER);
+        titlePane.setPadding(new Insets(10));
         Label titleLabel;
         if(gameOver) {
 			 titleLabel = new Label("Game Over!");
@@ -883,27 +915,64 @@ public class GUI {
         	titleLabel = new Label("Current Scores");
         }
         titleLabel.setFont(dicePaneFont);
+        titleLabel.setTextFill(Color.WHITE);
 		titleLabel.setAlignment(Pos.CENTER);
 		titlePane.getChildren().add(titleLabel);
 		rootPane.setTop(titlePane);
-        
-        FlowPane scoresPane = new FlowPane();
-        scoresPane.setAlignment(Pos.CENTER);
-        TilePane scores = new TilePane(Orientation.HORIZONTAL,20,20);
-        scoresPane.getChildren().add(scores);
-        
-        scores.setPrefRows(2);
-        scores.setAlignment(Pos.CENTER);
-        
        
-        for(Player player : game.getPlayers()) {
-        	scores.getChildren().add(getScorecard(player));
-        }
-        rootPane.setLeft(scoresPane);
-        
-        FlowPane container = new FlowPane(getLeaderBoard());
-        container.setAlignment(Pos.CENTER);
-        rootPane.setRight(container);
+
+		Player[] players = game.getPlayers();
+		
+		HBox mainPane = new HBox();
+		mainPane.setAlignment(Pos.CENTER);
+		VBox scoreCards = new VBox(10);
+		scoreCards.setPadding(new Insets(10,20,20,20));
+		HBox scores1 = new HBox(10);
+		HBox scores2 = new HBox(10);
+		scores1.setAlignment(Pos.CENTER);
+		scores2.setAlignment(Pos.CENTER);
+		
+		if(players.length <= 4) {
+			for (Player player : players) {
+				scores1.getChildren().add(getScorecard(player));
+			}
+			scoreCards.getChildren().add(scores1);
+		}
+		else {
+			int midPoint = players.length/2;
+			int lowerMidpoint = midPoint +1;
+			if(players.length % 2 != 0) {
+				lowerMidpoint = midPoint + 1;
+			}
+			else {
+				lowerMidpoint = midPoint;
+				midPoint = midPoint-1;
+			}
+						
+			for (int i = 0; i <= midPoint; i++) {
+				scores1.getChildren().add(getScorecard(players[i]));
+			}
+			for (int i= lowerMidpoint; i < players.length; i++) {
+				scores2.getChildren().add(getScorecard(players[i]));
+			}
+			scoreCards.getChildren().add(scores1);
+			scoreCards.getChildren().add(scores2);
+		}
+		
+		mainPane.getChildren().add(scoreCards);  
+		
+		VBox leaderboard = new VBox(20);
+		leaderboard.setAlignment(Pos.CENTER);
+		leaderboard.setPadding(new Insets(20));
+		if(players.length > 1) {
+			
+			leaderboard.getChildren().add(getLeaderBoard());
+			
+		}
+		  
+		leaderboard.getChildren().add(getHighScores());
+		mainPane.getChildren().add(leaderboard);
+        rootPane.setCenter(mainPane);
         
       //create and set scene and add to main window
         Scene dialogScene = new Scene(rootPane);
@@ -918,7 +987,9 @@ public class GUI {
 		 */
         final Stage dialog = new Stage();
         TilePane rootPane = new TilePane();
+        rootPane.setPadding(new Insets(20));
         rootPane.setAlignment(Pos.CENTER);
+        rootPane.setBackground(greenBackground);
         dialog.setTitle(String.format("%s's Scorecard",player.getPlayerName()));
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.initOwner(Main.getStage());
@@ -933,7 +1004,55 @@ public class GUI {
         dialog.setScene(dialogScene);
         dialog.show();
 	}
+	
+	private void displayLeaderBoard() {
+		/*
+		 * Create and initialise the popup window
+		 */
+        final Stage dialog = new Stage();
+        FlowPane rootPane = new FlowPane();
+        rootPane.setPadding(new Insets(20));
+        rootPane.setAlignment(Pos.CENTER);
+        rootPane.setBackground(greenBackground);
+        dialog.setTitle("Current Scores");
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.initOwner(Main.getStage());
+        //dialog.getIcons().add(new Image(Images.ICON.getImage()));
+        dialog.setHeight(410);
+        dialog.setWidth(310);
+        dialog.setResizable(false);
+        rootPane.getChildren().add(getLeaderBoard());
 
+      //create and set scene and add to main window
+        Scene dialogScene = new Scene(rootPane, 500, 40);
+        dialog.setScene(dialogScene);
+        dialog.show();
+	}
+	
+	private void displayHighScores() {
+		/*
+		 * Create and initialise the popup window
+		 */
+        final Stage dialog = new Stage();
+        TilePane rootPane = new TilePane();
+        rootPane.setPadding(new Insets(20));
+        rootPane.setAlignment(Pos.CENTER);
+        rootPane.setBackground(greenBackground);
+        dialog.setTitle("High Scores");
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.initOwner(Main.getStage());
+        //dialog.getIcons().add(new Image(Images.ICON.getImage()));
+        dialog.setHeight(510);
+        dialog.setWidth(310);
+        dialog.setResizable(false);
+        rootPane.getChildren().add(getHighScores());
+
+      //create and set scene and add to main window
+        Scene dialogScene = new Scene(rootPane, 500, 40);
+        dialog.setScene(dialogScene);
+        dialog.show();
+	}
+	
 	private VBox getScorecard(Player player) {
 		
 		player.getScorecard().Calculate();
@@ -943,13 +1062,14 @@ public class GUI {
 		Font scoreFont = new Font("Arial", 12);
 		
 		int leftColumnWidth = 150;
-		int rightColumnWidth = 10;
+		int rightColumnWidth = 50;
 		int rowHeight = 20;
 	    VBox result = new VBox(3);
 	    result.setPadding(new Insets(3));
-	    result.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, new CornerRadii(5), new BorderWidths(2))));
+	    result.setBorder(new Border(new BorderStroke(Color.WHITE, BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(2))));
 	    result.setAlignment(Pos.CENTER);
 	    result.setPrefHeight(100);
+	    result.setBackground(whiteBackground);
 	    
 	    Label playerName = new Label(String.format("%s's Scorecard",player.getPlayerName()));
 	    playerName.setFont(titleFont);
@@ -1094,7 +1214,7 @@ public class GUI {
 		return result;
 	}
 	
-	private FlowPane getLeaderBoard() {
+	private VBox getLeaderBoard() {
 		
 		ArrayList<Player> leaderBoard = new ArrayList<Player>();
 		for(Player player : game.getPlayers()) {
@@ -1108,16 +1228,17 @@ public class GUI {
 		
 		int leftColumnWidth = 30;
 		int centreColumnWidth = 200;
-		int rightColumnWidth = 30;
+		int rightColumnWidth = 50;
 		int rowHeight = 20;
 		
-	    FlowPane result = new FlowPane(Orientation.VERTICAL,3,3);
+	    VBox result = new VBox(3);
 	    result.setPadding(new Insets(3));
-	    result.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, new CornerRadii(5), new BorderWidths(2))));
+	    result.setBorder(new Border(new BorderStroke(Color.WHITE, BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(2))));
+	    result.setBackground(whiteBackground);
 	    result.setAlignment(Pos.TOP_CENTER );
 	    //result.setPrefHeight(50);
 	    
-	    Label title = new Label("LeaderBoard");
+	    Label title = new Label("Current Scores");
 	    title.setFont(titleFont);
 	    title.setAlignment(Pos.CENTER);
 	    
@@ -1141,6 +1262,7 @@ public class GUI {
 			nameLabel.setFont(totalFont);
 	    	Label scoreLabel = new Label(""+player.getScorecard().getGrandTotal());
 	    	scoreLabel.setPrefSize(rightColumnWidth, rowHeight);
+	    	scoreLabel.setAlignment(Pos.CENTER);
 			scoreLabel.setFont(totalFont);
 			
 	    	numbers.getChildren().add(numberLabel);
@@ -1153,4 +1275,74 @@ public class GUI {
 	    return result;
 	}
 	
+	private VBox getHighScores() {
+		
+		ArrayList<Score> highScores = HighScores.getHighScores();
+		Collections.sort(highScores);
+		
+		Font titleFont = new Font("Arial Bold", 20);
+		Font totalFont = new Font("Arial Bold", 15);
+		
+		int leftColumnWidth = 30;
+		int centreColumnWidth = 200;
+		int rightColumnWidth = 50;
+		int rowHeight = 20;
+		
+	    VBox result = new VBox(3);
+	    result.setPadding(new Insets(3));
+	    result.setBorder(new Border(new BorderStroke(Color.WHITE, BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(2))));
+	    result.setBackground(whiteBackground);
+	    result.setAlignment(Pos.TOP_CENTER );
+	    
+	    Label title = new Label("HighScores");
+	    title.setFont(titleFont);
+	    title.setAlignment(Pos.CENTER);
+	    
+	    HBox scoreBoard = new HBox();
+	    scoreBoard.setPadding(new Insets(5));
+	    scoreBoard.setAlignment(Pos.CENTER);
+	    VBox numbers = new VBox(5);
+	    VBox names = new VBox(5);
+	    VBox scores = new VBox(5);
+	    
+	    int number = 0;
+	    
+	    for(Score score : highScores) {
+	    	
+	    	number ++;
+	    	Label numberLabel = new Label("" + number);
+	    	numberLabel.setPrefSize(leftColumnWidth, rowHeight);
+	    	numberLabel.setFont(totalFont);
+	    	Label nameLabel = new Label(score.getName());
+	    	nameLabel.setPrefSize(centreColumnWidth, rowHeight);
+			nameLabel.setFont(totalFont);
+	    	Label scoreLabel = new Label("" + score.getScore());
+	    	scoreLabel.setPrefSize(rightColumnWidth, rowHeight);
+	    	scoreLabel.setAlignment(Pos.CENTER);
+			scoreLabel.setFont(totalFont);
+			
+	    	numbers.getChildren().add(numberLabel);
+	    	names.getChildren().add(nameLabel);
+	    	scores.getChildren().add(scoreLabel);
+	    }
+	    scoreBoard.getChildren().addAll(numbers,names,scores);
+	    
+	    result.getChildren().addAll(title,scoreBoard);
+	    return result;
+	}
+	
+	public static boolean confirmDialog(String title, String header, String content, AlertType alertType) {
+		Alert alert = new Alert(alertType);
+		alert.initOwner(Main.getStage());
+		alert.setTitle(title);
+		alert.setHeaderText(header);
+		alert.setContentText(content);
+		alert.setResizable(false);
+		
+		Optional<ButtonType> result = alert.showAndWait();
+		if (result.get() == ButtonType.OK){
+			return true;
+		}
+		return false;
+	}
 }
