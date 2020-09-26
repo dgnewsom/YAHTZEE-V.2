@@ -30,6 +30,10 @@ public class Die {
 	public int getCurrentValue() {
 		return currentValue;
 	}
+	
+	public void setHeld(boolean isHeld) {
+		this.isHeld = isHeld;
+	}
 
 	public boolean isHeld() {
 		return isHeld;

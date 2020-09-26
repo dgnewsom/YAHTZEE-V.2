@@ -29,6 +29,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -51,7 +52,7 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import main.Game;
-import main.Main;
+import main.Yahtzee;
 import player.Player;
 import scoring.Category;
 import scoring.HighScores;
@@ -163,21 +164,29 @@ public class GUI {
 			Random rand = new Random();
 			int[] animationDieArr = new int[5];
 			Die[] dieArr = game.getCurrentPlayer().getDice().getDieArray(); 
-			
+			boolean[] heldDice= new boolean[5];
 			for (int i = 0; i < dieArr.length; i++) {
 				if(dieArr[i].isHeld()) {
 					animationDieArr[i] = dieArr[i].getCurrentValue();
+					heldDice[i] = true;
 				}
 				else {
 					animationDieArr[i] = rand.nextInt(6)+1;
+					heldDice[i] = false;
 				}
 			}
 			
 			diceAnimationDice = new Dice(animationDieArr);
+			for (int j = 0; j < heldDice.length; j++) {
+				diceAnimationDice.getDieArray()[j].setHeld(heldDice[j]);
+			}
 			constructWindow(true);
 			frameNumber++;
 			if (frameNumber == 40) {
 				timer.stop();
+				if(game.getCurrentPlayer().getThrowsRemaining()<1) {
+					game.getCurrentPlayer().getDice().CancelHeldDice();
+				}
 				rollButton.setVisible(true);
 				constructWindow(false);
 			}
@@ -190,7 +199,7 @@ public class GUI {
 		root = new BorderPane();
 		createMenuBar();
 		createDicePane(rolling);
-		createScorePane();
+		createScorePane(rolling);
 		createPlayersPane();
 				
 		HBox gamePane = new HBox() ;
@@ -202,9 +211,9 @@ public class GUI {
 		
 		
 		Scene scene = new Scene(root);
-		Main.getStage().setScene(scene);
-		Main.getStage().sizeToScene();
-		Main.getStage().show();
+		Yahtzee.getStage().setScene(scene);
+		Yahtzee.getStage().sizeToScene();
+		Yahtzee.getStage().show();
 		
 	}
 
@@ -214,11 +223,11 @@ public class GUI {
 		file = new Menu("_File");
 		
 		MenuItem newGame = new MenuItem("_New");
-		newGame.setOnAction(e->{Main.startGame();});
+		newGame.setOnAction(e->{Yahtzee.startGame();});
 		newGame.setAccelerator(new KeyCodeCombination(KeyCode.N,KeyCombination.CONTROL_DOWN));
 		
 		MenuItem quitGame = new MenuItem("_Quit");
-		quitGame.setOnAction(e->{Main.quitGame();});
+		quitGame.setOnAction(e->{Yahtzee.quitGame();});
 		quitGame.setAccelerator(new KeyCodeCombination(KeyCode.Q,KeyCombination.CONTROL_DOWN));
 		
 		/*
@@ -338,7 +347,8 @@ public class GUI {
 		rollButton.setTextFill(Color.WHITE);
 		rollButton.setBackground(darkGreenBackground);
 		if(game.getCurrentPlayer().getThrowsRemaining() < 1) {
-       	 	rollButton.setDisable(true);
+			rollButton.setDisable(true);
+       	 	
         }
 		
 		if(rolling) {
@@ -349,12 +359,14 @@ public class GUI {
 				temp.setPrefHeight(100);
 				temp.setImage(game.getCurrentPlayer().getDieColour());
 				temp.setBackground(null);
-				temp.setOnMouseClicked(e->{if(game.getCurrentPlayer().getThrowsRemaining() > 0)
+				temp.setOnMouseClicked(e->{
 					   temp.Click(e);
 					   constructWindow(false);});
 				diceButtons.getChildren().add(temp);
 			}
 			rollButton.setDisable(true);
+			throwsRemaining.setVisible(false);
+			rollNumber.setVisible(false);
 		}
 		else {
 			Dice dice = game.getCurrentPlayer().getDice(); 
@@ -374,10 +386,10 @@ public class GUI {
 			}
 		}
 		
-		rollButton.setOnMouseClicked(e->{game.getCurrentPlayer().RollDice();
-										 rollingAnimation();
-		                                 constructWindow(false);
-		                                 
+		rollButton.setOnMouseClicked(e->{
+			rollingAnimation();
+		    game.getCurrentPlayer().RollDice();
+		    constructWindow(false);
 		});
 		
 		dicePane.getChildren().addAll(rollNumber,throwsRemaining, diceButtons, rollButton);
@@ -387,14 +399,13 @@ public class GUI {
 		
 		
 		frameNumber = 0;
-	       rollButton.setVisible(false);
 	       constructWindow(true);
 	       timer.start();
 	}
 		
 	
 
-	private void createScorePane() {
+	private void createScorePane(Boolean rolling) {
 		
 		scoreCardPane = new VBox(10);
 		scoreCardPane.setBackground(greenBackground);
@@ -460,7 +471,7 @@ public class GUI {
 				game.nextPlayer();
 				constructWindow(false);
 			});
-			if(game.getCurrentPlayer().getScorecard().getCategoryScore(category) != null || game.getCurrentPlayer().getThrowsRemaining() >=3) {
+			if(rolling || game.getCurrentPlayer().getScorecard().getCategoryScore(category) != null || game.getCurrentPlayer().getThrowsRemaining() >=3) {
 				submit.setVisible(false);
 			}
 			upperCategoryLabels.getChildren().add(name);
@@ -548,7 +559,6 @@ public class GUI {
 		lowerTitle.setAlignment(Pos.CENTER);
 		lowerTitleLabel.setPadding(new Insets(5,0,20,0));
 		lowerTitle.setPrefWidth(scoreCardWidth);
-		//lowerTitle.setMaxHeight(30);
 		lowerSection.getChildren().add(lowerTitle);
 		
 		//Categories / Scores / Buttons
@@ -587,10 +597,12 @@ public class GUI {
 			submit.setOnMouseClicked(e->{
 				game.getCurrentPlayer().getScorecard().setScore(game.getCurrentPlayer().getDice(), category);
 				game.getCurrentPlayer().getScorecard().Calculate();
+				game.getCurrentPlayer().getDice().CancelHeldDice();
+				game.getCurrentPlayer().getDice().RollDice();
 				game.nextPlayer();
 				constructWindow(false);
 			});
-			if(game.getCurrentPlayer().getScorecard().getCategoryScore(category) != null || game.getCurrentPlayer().getThrowsRemaining()>=3) {
+			if(rolling || game.getCurrentPlayer().getScorecard().getCategoryScore(category) != null || game.getCurrentPlayer().getThrowsRemaining()>=3) {
 				submit.setVisible(false);
 			}
 			lowerCategoryLabels.getChildren().add(name);
@@ -772,8 +784,8 @@ public class GUI {
         BorderPane rootPane = new BorderPane();
         dialog.setTitle("How Many Players?");
         dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.initOwner(Main.getStage());
-        //dialog.getIcons().add(new Image(Images.ICON.getImage()));
+        dialog.initOwner(Yahtzee.getStage());
+        dialog.getIcons().add(new Image("images/icon.png"));
         dialog.setResizable(false);
         dialog.setOnCloseRequest(e->{System.exit(0);});
 		
@@ -809,7 +821,7 @@ public class GUI {
         Button okButton = new Button("OK");
         okButton.setMinWidth(75);
         //Set event to set custom parameters close window and start new game
-        okButton.setOnMouseClicked(e->{Main.setNumberOfPlayers(playersComboBox.getValue());
+        okButton.setOnMouseClicked(e->{Yahtzee.setNumberOfPlayers(playersComboBox.getValue());
         							   dialog.close();});
         
         //add buttons to buttons pane
@@ -829,7 +841,7 @@ public class GUI {
 	
 	private void setPlayerDetails() {
 		
-		playerDetails = new Object[2][Main.getNumberOfPlayers()];
+		playerDetails = new Object[2][Yahtzee.getNumberOfPlayers()];
 		
 		/*
 		 * Create observable list of colours for the spinner on the dialog
@@ -844,8 +856,8 @@ public class GUI {
         BorderPane rootPane = new BorderPane();
         dialog.setTitle("Enter Player Details");
         dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.initOwner(Main.getStage());
-        //dialog.getIcons().add(new Image(Images.ICON.getImage()));
+        dialog.initOwner(Yahtzee.getStage());
+        dialog.getIcons().add(new Image("images/icon.png"));
         dialog.setResizable(false);
         dialog.setOnCloseRequest(e->{System.exit(0);});
 		
@@ -865,7 +877,7 @@ public class GUI {
         VBox inputs = new VBox(5);
         inputs.setAlignment(Pos.CENTER);
         inputs.setPadding(new Insets(20));
-        for (int i = 0; i < Main.getNumberOfPlayers(); i++) {
+        for (int i = 0; i < Yahtzee.getNumberOfPlayers(); i++) {
 			HBox playerInput = new HBox(10);
 			TextField nameInput = new TextField(String.format("Player %d", i+1));
 			nameInput.setAlignment(Pos.CENTER);
@@ -950,11 +962,8 @@ public class GUI {
         final Stage dialog = new Stage();
         dialog.setTitle("Scores");
         dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.initOwner(Main.getStage());
-        //dialog.getIcons().add(new Image(Images.ICON.getImage()));
-        //dialog.setMaximized(true);
-        //dialog.setWidth(310);
-        //dialog.setResizable(false);
+        dialog.initOwner(Yahtzee.getStage());
+        dialog.getIcons().add(new Image("images/icon.png"));
         dialog.setOnCloseRequest(e->{
         	if(gameOver) {
         	constructWindow(false);
@@ -1053,8 +1062,8 @@ public class GUI {
         rootPane.setBackground(greenBackground);
         dialog.setTitle(String.format("%s's Scorecard",player.getPlayerName()));
         dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.initOwner(Main.getStage());
-        //dialog.getIcons().add(new Image(Images.ICON.getImage()));
+        dialog.initOwner(Yahtzee.getStage());
+        dialog.getIcons().add(new Image("images/icon.png"));
         dialog.setHeight(510);
         dialog.setWidth(310);
         dialog.setResizable(false);
@@ -1077,8 +1086,8 @@ public class GUI {
         rootPane.setBackground(greenBackground);
         dialog.setTitle("Current Scores");
         dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.initOwner(Main.getStage());
-        //dialog.getIcons().add(new Image(Images.ICON.getImage()));
+        dialog.initOwner(Yahtzee.getStage());
+        dialog.getIcons().add(new Image("images/icon.png"));
         dialog.setHeight(410);
         dialog.setWidth(310);
         dialog.setResizable(false);
@@ -1101,8 +1110,8 @@ public class GUI {
         rootPane.setBackground(greenBackground);
         dialog.setTitle("High Scores");
         dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.initOwner(Main.getStage());
-        //dialog.getIcons().add(new Image(Images.ICON.getImage()));
+        dialog.initOwner(Yahtzee.getStage());
+        dialog.getIcons().add(new Image("images/icon.png"));
         dialog.setHeight(510);
         dialog.setWidth(310);
         dialog.setResizable(false);
@@ -1394,7 +1403,7 @@ public class GUI {
 	
 	public static boolean confirmDialog(String title, String header, String content, AlertType alertType) {
 		Alert alert = new Alert(alertType);
-		alert.initOwner(Main.getStage());
+		alert.initOwner(Yahtzee.getStage());
 		alert.setTitle(title);
 		alert.setHeaderText(header);
 		alert.setContentText(content);

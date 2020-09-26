@@ -3,22 +3,28 @@ package main;
 import gui.GUI;
 import javafx.application.Application;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import scoring.HighScores;
 
-public class Main extends Application {
+public class Yahtzee extends Application {
 
 	private static Stage stage;
 	private static int numberOfPlayers = 1;
-		
+	
+	public static void main(String[] args) {
+		launch(args);
+	}
+	
 	@Override
 	public void start(Stage stage){
 		
-		Main.stage = stage;
+		Yahtzee.stage = stage;
 		stage.setResizable(false);
 		stage.setX(150);
 		stage.setY(0);
 		stage.setTitle("YAHTZEE!");
+		stage.getIcons().add(new Image("images/icon.png"));
 		stage.setOnCloseRequest(e->{HighScores.exportHighScoresToFile();});
 		startGame();		
 	}
@@ -39,7 +45,7 @@ public class Main extends Application {
 	}
 
 	public static Stage getStage() {
-		return Main.stage;
+		return Yahtzee.stage;
 	}
 
 	public static int getNumberOfPlayers() {
@@ -47,7 +53,7 @@ public class Main extends Application {
 	}
 
 	public static void setNumberOfPlayers(int numberOfPlayers) {
-		Main.numberOfPlayers = numberOfPlayers;
+		Yahtzee.numberOfPlayers = numberOfPlayers;
 	}
 
 }

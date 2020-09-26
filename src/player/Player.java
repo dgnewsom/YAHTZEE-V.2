@@ -25,9 +25,6 @@ public class Player implements Comparable<Player>{
 			dice.RollDice();
 			throwsRemaining --;
 		}
-		if(throwsRemaining == 0) {
-			dice.CancelHeldDice();
-		}
 	}
 	
 	public boolean isFinished() {
