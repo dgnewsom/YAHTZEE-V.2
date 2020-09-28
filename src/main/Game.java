@@ -1,17 +1,24 @@
 package main;
 
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
 import dice.DieColour;
 import gui.GUI;
 import player.Player;
 import scoring.HighScores;
 
-public class Game {
+public class Game implements Serializable{
 
+	private static final long serialVersionUID = 6005740228739669114L;
 	Player[] players;
 	int currentPlayerIndex;
 	Player currentPlayer;
 	boolean gameOver = false;
-	GUI gui;
+	LocalDateTime date;
+	
+	transient GUI gui;
+	
 	
 	public Game(Object[][] playerDetails, GUI gui) {
 		players = new Player[playerDetails[0].length];
@@ -22,6 +29,7 @@ public class Game {
 		currentPlayer = players[currentPlayerIndex];
 		this.gui = gui;
 		HighScores.importHighScoresFromFile();
+		date = null;
 	}
 
 	public void nextPlayer() {
@@ -70,5 +78,13 @@ public class Game {
 	
 	public Player[] getPlayers() {
 		return players;
+	}
+	
+	public LocalDateTime getDate() {
+		return date;
+	}
+
+	public void setDate(LocalDateTime date) {
+		this.date = date;
 	}
 }

@@ -1,0 +1,70 @@
+package main;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
+import gui.GUI;
+
+public abstract class SaveGame {
+
+	private static Game[] saveGames = new Game[10];
+	private static final File saveGameFile = new File("savegame.txt");
+	
+	public static void saveGame(Game game, int slotNumber) {
+		
+		saveGames[slotNumber] = game;
+		
+		exportSaveGames();
+	}
+
+	public static void exportSaveGames() {
+		try  
+		{  
+			FileOutputStream fileOut =
+			         new FileOutputStream(saveGameFile);
+			         ObjectOutputStream out = new ObjectOutputStream(fileOut);
+			         out.writeObject(saveGames);
+			         out.close();
+			         fileOut.close();
+			         
+			out.close();
+		}
+		catch(IOException e)  
+		{  
+			e.printStackTrace();  
+		}
+		
+	}
+
+	public static Game loadGame(GUI gui, int slotNumber) {
+		
+		importSaveGames();
+		Game temp = saveGames[slotNumber];
+		return temp;
+		
+	}
+
+	public static void importSaveGames() {
+		try {
+			FileInputStream fileIn = new FileInputStream(saveGameFile);
+	        ObjectInputStream in = new ObjectInputStream(fileIn);
+	        saveGames = (Game[]) in.readObject();
+	        in.close();
+	        fileIn.close();
+		} catch (Exception e) {
+			saveGames = new Game[10];
+			
+		}
+		for (int i = 0; i < saveGames.length; i++) {
+			System.out.println(getSaveGames()[i]);
+		}
+	}
+	
+	public static Game[] getSaveGames() {
+		return saveGames;
+	}
+}

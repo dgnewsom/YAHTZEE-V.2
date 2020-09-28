@@ -1,5 +1,6 @@
 package scoring;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -7,9 +8,9 @@ import java.util.Map;
 
 import dice.Dice;
 
-public class ScoreCard {
+public class ScoreCard implements Serializable{
 
-
+	private static final long serialVersionUID = -7843594369283070539L;
 	private List<Category> categoriesUpper = Arrays.asList(Category.ACES,Category.TWOS,Category.THREES,Category.FOURS,Category.FIVES,Category.SIXES);
 	private List<Category> categoriesLower = Arrays.asList(Category.THREEOFAKIND,Category.FOUROFAKIND,Category.FULLHOUSE,Category.SMALLSTRAIGHT,Category.LARGESTRAIGHT,Category.YAHTZEE,Category.CHANCE);
 

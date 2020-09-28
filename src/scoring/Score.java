@@ -1,5 +1,6 @@
 package scoring;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 
@@ -9,8 +10,9 @@ import java.util.Comparator;
  * @author Daniel Newsom
  * @version 3.0
  */
-public class Score implements Comparable<Score>, Comparator<Score>{
+public class Score implements Comparable<Score>, Comparator<Score>, Serializable{
 
+	private static final long serialVersionUID = 4614907272587876617L;
 	private String name;
 	private int score;
 

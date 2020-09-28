@@ -2,8 +2,10 @@ package gui;
 
 
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 
@@ -52,14 +54,16 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import main.Game;
+import main.SaveGame;
 import main.Yahtzee;
 import player.Player;
 import scoring.Category;
 import scoring.HighScores;
 import scoring.Score;
 
-public class GUI {
+public class GUI implements Serializable{
 
+	private static final long serialVersionUID = 7853701966758069628L;
 	private Game game;
 	private Object[][] playerDetails = new Object[][]{{"Danny","Louie"},{DieColour.WHITE,DieColour.BLACK}};
 	private BorderPane root;
@@ -230,15 +234,27 @@ public class GUI {
 		quitGame.setOnAction(e->{Yahtzee.quitGame();});
 		quitGame.setAccelerator(new KeyCodeCombination(KeyCode.Q,KeyCombination.CONTROL_DOWN));
 		
-		/*
-		 * To Add=============================================================
-		MenuItem save = new MenuItem("_Save");
-		//save.setOnAction(e->{saveContacts();});
-		MenuItem load = new MenuItem("_Load");
-		//load.setOnAction(e->{loadContacts();});
-		*/
 		
-		file.getItems().addAll(newGame,quitGame);
+		Menu saveGame = new Menu("_Save");
+		SaveGame.importSaveGames();
+		for (int i = 0; i < SaveGame.getSaveGames().length; i++) {
+			int slotNumber = i;
+			MenuItem slot;
+			String menuString = String.format("Slot _%d - %s", (slotNumber) +1, "New Save");
+			
+			if(!game.equals(null)) {
+				menuString = String.format("Slot _%d - %s", (slotNumber) +1, "Date");
+			}
+			slot = new MenuItem(menuString);
+			slot.setOnAction(e->{SaveGame.saveGame(game,slotNumber);});
+			saveGame.getItems().add(slot);
+		} 
+		
+		Menu loadGame = new Menu("_Load");
+		//load.setOnAction(e->{game = SaveGame.loadGame(this);
+							 //constructWindow(false);});
+		
+		file.getItems().addAll(newGame,saveGame,loadGame,quitGame);
 		
 		diceColours = new Menu("Change Dice _Colours");
 		
