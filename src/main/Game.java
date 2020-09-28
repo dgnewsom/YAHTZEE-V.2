@@ -8,7 +8,7 @@ import gui.GUI;
 import player.Player;
 import scoring.HighScores;
 
-public class Game implements Serializable{
+public class Game implements Comparable<Game>,Serializable{
 
 	private static final long serialVersionUID = 6005740228739669114L;
 	Player[] players;
@@ -31,7 +31,6 @@ public class Game implements Serializable{
 		HighScores.importHighScoresFromFile();
 		date = LocalDateTime.now();
 	}
-
 
 	public void nextPlayer() {
 		if(currentPlayerIndex == players.length-1) {
@@ -87,5 +86,11 @@ public class Game implements Serializable{
 
 	public void setDate(LocalDateTime date) {
 		this.date = date;
+	}
+
+
+	@Override
+	public int compareTo(Game other) {
+		return other.getDate().compareTo(this.getDate());
 	}
 }

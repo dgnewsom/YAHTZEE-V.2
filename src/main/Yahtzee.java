@@ -26,14 +26,22 @@ public class Yahtzee extends Application {
 		stage.setTitle("YAHTZEE!");
 		stage.getIcons().add(new Image("images/icon.png"));
 		stage.setOnCloseRequest(e->{HighScores.exportHighScoresToFile();});
-		startGame();		
+		SaveGame.importSaveGames();
+		GUI gui = new GUI();
+		if(SaveGame.getLatestGame()!=null) {
+			gui.checkContinue();
+		}
+		else
+		{
+			startGame();		
+		}
 	}
 	
 	public static void startGame() {
 		GUI gui = new GUI();
 		Game game = new Game(gui.getPlayerDetails(),gui);
 		gui.setGame(game);
-		SaveGame.importSaveGames();
+		
 		gui.constructWindow(false);
 	}
 	

@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 
 import gui.GUI;
 
@@ -49,6 +51,31 @@ public abstract class SaveGame {
 		return temp;
 		
 	}
+	
+	public static Game loadLatestGame(GUI gui) {
+		
+		Game temp = getLatestGame();
+		temp.setGui(gui);
+		gui.setGame(temp);
+		return temp;
+		
+	}
+	
+	public static Game getLatestGame() {
+		ArrayList<Game> sortedSaves = new ArrayList<>();
+		for (int i = 0; i < saveGames.length; i++) {
+			if(saveGames[i] != null) {
+				sortedSaves.add(saveGames[i]);
+			}
+		}
+		if(sortedSaves.size() > 0) {
+			Collections.sort(sortedSaves);
+			
+			return sortedSaves.get(0);
+		
+		}
+		return null;
+	}
 
 	public static void importSaveGames() {
 		try {
@@ -65,6 +92,12 @@ public abstract class SaveGame {
 	
 	public static void clearSaveGame(int slotNumber) {
 		saveGames[slotNumber] = null;
+		exportSaveGames();
+	}
+	
+	public static void clearAllSaveGames() {
+		saveGames = new Game[10];
+		exportSaveGames();
 	}
 	
 	public static Game[] getSaveGames() {

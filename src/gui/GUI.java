@@ -16,6 +16,7 @@ import dice.DieColour;
 import javafx.animation.AnimationTimer;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -36,6 +37,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.Border;
@@ -96,8 +98,9 @@ public class GUI implements Serializable{
 	/*
 	 * Menu Fields
 	 */
+	DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy - HH:mm");
 	private MenuBar menu;
-	private Menu file;
+	private Menu gameMenu;
 	private Menu diceColours;
 	private Menu viewScores;
 	private Menu highScores;
@@ -224,12 +227,16 @@ public class GUI implements Serializable{
 	private void createMenuBar() {
 		menu = new MenuBar();
 		
-		file = new Menu("_File");
+		gameMenu = new Menu("_Game");
 		
-		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy - HH:mm");
+		
 		
 		MenuItem newGame = new MenuItem("_New");
-		newGame.setOnAction(e->{Yahtzee.startGame();});
+		newGame.setOnAction(e->{
+			if(confirmDialog("New game", "Start new game?", "Current Game progress will be lost!", AlertType.CONFIRMATION)) {
+				Yahtzee.startGame();
+			}
+		});
 		newGame.setAccelerator(new KeyCodeCombination(KeyCode.N,KeyCombination.CONTROL_DOWN));
 		
 		MenuItem quitGame = new MenuItem("_Quit");
@@ -243,7 +250,7 @@ public class GUI implements Serializable{
 			int slotNumber = i;
 			MenuItem slot;
 			String menuString = String.format("Slot _%02d  -  %s", (slotNumber) +1, "New Save");
-			if(SaveGame.getSaveGames()[i] != null) {
+			if(SaveGame.getSaveGames()[slotNumber] != null) {
 				String names = "";
 				for(Player player : SaveGame.getSaveGames()[i].getPlayers()) {
 					names += player.getPlayerName() + ", ";
@@ -270,6 +277,26 @@ public class GUI implements Serializable{
 		} 
 		
 		Menu loadGame = new Menu("_Load");
+		
+		if(SaveGame.getLatestGame() != null) {
+			
+			String names = "";
+			for(Player player : SaveGame.getLatestGame().getPlayers()) {
+				names += player.getPlayerName() + ", ";
+			}
+			names = names.substring(0, names.length()-2);
+			
+			MenuItem loadLatest = new MenuItem(String.format("*Latest* -  %-19s    -    %s", SaveGame.getLatestGame().getDate().format(dateFormatter),names) );
+			
+			loadLatest.setOnAction(e->{
+				if(confirmDialog("Load Game?", "Load latest saved game?", "Current game progress will be lost!", AlertType.CONFIRMATION)){
+					SaveGame.loadLatestGame(this);
+					constructWindow(false);
+				}
+			});
+			loadGame.getItems().add(loadLatest);
+		}
+			
 		for (int i = 0; i < SaveGame.getSaveGames().length; i++) {
 			int slotNumber = i;
 			MenuItem slot = new MenuItem();
@@ -277,7 +304,13 @@ public class GUI implements Serializable{
 			slot.setDisable(true);
 			String menuString = String.format("Slot _%02d  -  %s", (slotNumber) +1, "Empty");
 			if(SaveGame.getSaveGames()[i] != null) {
-				menuString = String.format("Slot _%02d  -  %s", (slotNumber) +1, SaveGame.getSaveGames()[i].getDate().format(dateFormatter));
+				String names = "";
+				for(Player player : SaveGame.getSaveGames()[i].getPlayers()) {
+					names += player.getPlayerName() + ", ";
+				}
+				names = names.substring(0, names.length()-2);
+				menuString = String.format("Slot _%02d  -  %-19s    -    %s", 
+						   (slotNumber) +1, SaveGame.getSaveGames()[i].getDate().format(dateFormatter),names);
 				slot.setDisable(false);
 			}
 			slot.setText(menuString);
@@ -289,9 +322,45 @@ public class GUI implements Serializable{
 					}
 			});
 			loadGame.getItems().add(slot);
+		}
+			Menu clearSaveGame = new Menu("_Clear saved game");
+			for (int i = 0; i < SaveGame.getSaveGames().length; i++) {
+				int slotNumber = i;
+				MenuItem slot = new MenuItem();
+				
+				slot.setDisable(true);
+				String menuString = String.format("Slot _%02d  -  %s", (slotNumber) +1, "Empty");
+				if(SaveGame.getSaveGames()[i] != null) {
+					String names = "";
+					for(Player player : SaveGame.getSaveGames()[i].getPlayers()) {
+						names += player.getPlayerName() + ", ";
+					}
+					names = names.substring(0, names.length()-2);
+					menuString = String.format("**CLEAR** Slot _%02d  -  %-19s    -    %s", 
+							   (slotNumber) +1, SaveGame.getSaveGames()[i].getDate().format(dateFormatter),names);slot.setDisable(false);
+				}
+				slot.setText(menuString);
+				
+				slot.setOnAction(e->{
+						if(confirmDialog("Clear Game?", "Clear game from slot " + ((slotNumber) + 1) + "?", "Saved game will be permanently lost!", AlertType.CONFIRMATION)){
+							SaveGame.clearSaveGame(slotNumber);
+							constructWindow(false);
+						}
+				});
+				
+				clearSaveGame.getItems().add(slot);
 		} 
-		
-		file.getItems().addAll(newGame,saveGame,loadGame,quitGame);
+			
+			MenuItem clearAllSaveGames = new MenuItem("**Clear All**");
+			clearAllSaveGames.setOnAction(e->{
+				if(confirmDialog("Clear saved games?", "Clear all saved game's?", "All saved game's will be permanently lost!", AlertType.CONFIRMATION)){
+					SaveGame.clearAllSaveGames();;
+					constructWindow(false);
+				}
+		});
+		clearSaveGame.getItems().add(clearAllSaveGames);
+			
+		gameMenu.getItems().addAll(newGame,saveGame,loadGame,clearSaveGame,quitGame);
 		
 		diceColours = new Menu("Change Dice _Colours");
 		
@@ -342,7 +411,7 @@ public class GUI implements Serializable{
 			};});
 		highScores.getItems().add(clearHighScores);
 		
-		menu.getMenus().addAll(file,diceColours,viewScores,highScores);
+		menu.getMenus().addAll(gameMenu,diceColours,viewScores,highScores);
 		
 	}
 
@@ -439,11 +508,22 @@ public class GUI implements Serializable{
 			}
 		}
 		
-		rollButton.setOnMouseClicked(e->{
+		rollButton.setOnAction(e->{
 			rollingAnimation();
 		    game.getCurrentPlayer().RollDice();
 		    constructWindow(false);
 		});
+		
+		rollButton.setDefaultButton(true);
+		rollButton.setOnKeyPressed(new EventHandler<KeyEvent>() {
+        	@Override
+        	public void handle(KeyEvent k) {
+        		if (k.getCode().equals(KeyCode.SPACE)) {
+        			Button temp = (Button) k.getSource();
+        			temp.fire();
+        		}
+        	}
+        });
 		
 		dicePane.getChildren().addAll(rollNumber,throwsRemaining, diceButtons, rollButton);
 	}
@@ -814,10 +894,84 @@ public class GUI implements Serializable{
 
 	public Object[][] getPlayerDetails() {
 		
+		
 		setNumberOfPlayers();
 		setPlayerDetails();
 		
 		return playerDetails;
+	}
+	
+	public void checkContinue() {
+		
+		/*
+		 * Create and initialise the popup window
+		 */
+        final Stage dialog = new Stage();
+        VBox rootPane = new VBox(30);
+        rootPane.setAlignment(Pos.CENTER);
+        dialog.setTitle("Load game?");
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.initOwner(Yahtzee.getStage());
+        dialog.getIcons().add(new Image("images/icon.png"));
+        dialog.setResizable(false);
+        dialog.setOnCloseRequest(e->{Yahtzee.startGame();});
+		
+        /*
+		 * Create and initialise title pane for the popup        
+		 */
+        String names = "";
+		for(Player player : SaveGame.getLatestGame().getPlayers()) {
+			names += player.getPlayerName() + " : " + player.getScorecard().getGrandTotal() + "\n";
+		}
+		
+        Label titleLabel = new Label("Would you like to load last save?" + String.format("\n\n%-19s\n\n%s", SaveGame.getLatestGame().getDate().format(dateFormatter),names));
+        titleLabel.setFont(new Font("Arial Bold",20));
+        titleLabel.setTextAlignment(TextAlignment.CENTER);
+        titleLabel.setPadding(new Insets(20));
+           
+        
+        /*
+         * Create pane for the buttons 
+         */
+        TilePane buttons = new TilePane();
+        buttons.setPadding(new Insets(20));
+        buttons.setHgap(10);
+        BorderPane buttonsPane = new BorderPane();
+        
+        /*
+         * Create the buttons for applying the settings or cancelling
+         * and set event handlers
+         */
+        Button okButton = new Button("OK");
+        okButton.setMinWidth(75);
+        //Set event to set custom parameters close window and start new game
+        okButton.setOnAction(e->{
+        	SaveGame.loadLatestGame(this);
+        	dialog.close();
+        	constructWindow(false);
+        });
+        okButton.setOnKeyPressed(new EventHandler<KeyEvent>() {
+        	@Override
+        	public void handle(KeyEvent k) {
+        		if (k.getCode().equals(KeyCode.ENTER)) {
+        			Button temp = (Button) k.getSource();
+        			temp.fire();
+        		}
+        	}
+        });
+        
+        //add buttons to buttons pane
+        buttons.getChildren().addAll(okButton);
+        buttonsPane.setRight(buttons);;
+        
+        //Add three main panes to root pane
+        //rootPane.setTop(titlePane);
+        rootPane.getChildren().addAll(titleLabel,buttonsPane);
+        
+        //create and set scene and add to main window
+        Scene dialogScene = new Scene(rootPane);
+        dialog.setScene(dialogScene);
+        dialog.showAndWait();
 	}
 	
 	private void setNumberOfPlayers() {
@@ -874,8 +1028,17 @@ public class GUI implements Serializable{
         Button okButton = new Button("OK");
         okButton.setMinWidth(75);
         //Set event to set custom parameters close window and start new game
-        okButton.setOnMouseClicked(e->{Yahtzee.setNumberOfPlayers(playersComboBox.getValue());
+        okButton.setOnAction(e->{Yahtzee.setNumberOfPlayers(playersComboBox.getValue());
         							   dialog.close();});
+        okButton.setOnKeyPressed(new EventHandler<KeyEvent>() {
+        	@Override
+        	public void handle(KeyEvent k) {
+        		if (k.getCode().equals(KeyCode.ENTER)) {
+        			Button temp = (Button) k.getSource();
+        			temp.fire();
+        		}
+        	}
+        });
         
         //add buttons to buttons pane
         buttons.getChildren().addAll(okButton);
@@ -977,8 +1140,9 @@ public class GUI implements Serializable{
          */
         Button okButton = new Button("OK");
         okButton.setMinWidth(75);
+        
         //Set event to set custom parameters close window and start new game
-        okButton.setOnMouseClicked(e->{
+        okButton.setOnAction(e->{
         	for(int i = 0; i < inputs.getChildren().size();i++) {
         		HBox row = (HBox)inputs.getChildren().get(i);
         		TextField nameText = (TextField) row.getChildren().get(0);
@@ -990,6 +1154,18 @@ public class GUI implements Serializable{
         	}
         	dialog.close();
         });
+        
+        okButton.setOnKeyPressed(new EventHandler<KeyEvent>() {
+        	@Override
+        	public void handle(KeyEvent k) {
+        		if (k.getCode().equals(KeyCode.ENTER)) {
+        			Button temp = (Button) k.getSource();
+        			temp.fire();
+        		}
+        	}
+        });
+        
+        
 
         //add buttons to buttons pane
         buttons.getChildren().addAll(okButton);
