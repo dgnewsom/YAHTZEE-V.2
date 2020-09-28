@@ -1,8 +1,11 @@
 package dice;
 
+import java.io.Serializable;
 import java.util.Set;
 
-public class Dice {
+public class Dice implements Serializable {
+
+	private static final long serialVersionUID = -5846231332472789185L;
 
 	Die[] dice;
 	

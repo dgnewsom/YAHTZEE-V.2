@@ -1,11 +1,15 @@
 package player;
 
+import java.io.Serializable;
+
 import dice.Dice;
 import dice.DieColour;
 import scoring.ScoreCard;
 
-public class Player implements Comparable<Player>{
+public class Player implements Comparable<Player>, Serializable{
 
+	
+	private static final long serialVersionUID = -6691286326952273885L;
 	private Dice dice;
 	private ScoreCard scorecard;
 	private String playerName;

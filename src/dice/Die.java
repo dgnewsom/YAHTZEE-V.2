@@ -1,8 +1,10 @@
 package dice;
+import java.io.Serializable;
 import java.util.Random;
 
-public class Die {
+public class Die implements Serializable{
 
+	private static final long serialVersionUID = -7884605991903168949L;
 	private int currentValue;
 	private boolean isHeld;
 	private Random random = new Random();

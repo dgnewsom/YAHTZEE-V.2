@@ -1,12 +1,11 @@
 package scoring;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -23,16 +22,13 @@ public abstract class HighScores {
 		
 		try  
 		{  
-			/*
-			 * Try to read from text file and populate highscore lists 
-			 */
-			FileReader fr = new FileReader(highScoresFile);
-			BufferedReader br=new BufferedReader(fr);
-			for (int i = 0; i < 10; i++) {
-				String[] line = br.readLine().split(":");
-				highScores.add(new Score(line[0], Integer.parseInt(line[1])));
-			}
-			br.close();
+			
+			FileInputStream fileIn = new FileInputStream(highScoresFile);
+	         ObjectInputStream in = new ObjectInputStream(fileIn);
+	         highScores = (ArrayList<Score>) in.readObject();
+	         in.close();
+	         fileIn.close();
+	         
 			Collections.sort(highScores);
 		}
 		catch (Exception e) {
@@ -44,14 +40,15 @@ public abstract class HighScores {
 		
 		try  
 		{  
-			FileOutputStream fos = new FileOutputStream(highScoresFile);   
-			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));  
-
-			for (Score score : highScores) {
-				bw.write(score.getName() + ":" + score.getScore());
-				bw.newLine();
-			}
-			bw.close();
+			
+			FileOutputStream fileOut =
+			         new FileOutputStream(highScoresFile);
+			         ObjectOutputStream out = new ObjectOutputStream(fileOut);
+			         out.writeObject(highScores);
+			         out.close();
+			         fileOut.close();
+			         
+			out.close();
 		}
 		catch(IOException e)  
 		{  
