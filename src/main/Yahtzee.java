@@ -33,6 +33,7 @@ public class Yahtzee extends Application {
 		GUI gui = new GUI();
 		Game game = new Game(gui.getPlayerDetails(),gui);
 		gui.setGame(game);
+		SaveGame.importSaveGames();
 		gui.constructWindow(false);
 	}
 	

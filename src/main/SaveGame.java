@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.time.LocalDateTime;
 
 import gui.GUI;
 
@@ -16,8 +17,8 @@ public abstract class SaveGame {
 	
 	public static void saveGame(Game game, int slotNumber) {
 		
+		game.setDate(LocalDateTime.now());
 		saveGames[slotNumber] = game;
-		
 		exportSaveGames();
 	}
 
@@ -42,8 +43,9 @@ public abstract class SaveGame {
 
 	public static Game loadGame(GUI gui, int slotNumber) {
 		
-		importSaveGames();
 		Game temp = saveGames[slotNumber];
+		temp.setGui(gui);
+		gui.setGame(temp);
 		return temp;
 		
 	}
@@ -57,11 +59,12 @@ public abstract class SaveGame {
 	        fileIn.close();
 		} catch (Exception e) {
 			saveGames = new Game[10];
-			
 		}
-		for (int i = 0; i < saveGames.length; i++) {
-			System.out.println(getSaveGames()[i]);
-		}
+		
+	}
+	
+	public static void clearSaveGame(int slotNumber) {
+		saveGames[slotNumber] = null;
 	}
 	
 	public static Game[] getSaveGames() {

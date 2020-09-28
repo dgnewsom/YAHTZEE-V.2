@@ -29,8 +29,9 @@ public class Game implements Serializable{
 		currentPlayer = players[currentPlayerIndex];
 		this.gui = gui;
 		HighScores.importHighScoresFromFile();
-		date = null;
+		date = LocalDateTime.now();
 	}
+
 
 	public void nextPlayer() {
 		if(currentPlayerIndex == players.length-1) {

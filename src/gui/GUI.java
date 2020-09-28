@@ -3,9 +3,9 @@ package gui;
 
 
 import java.io.Serializable;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 
@@ -226,6 +226,8 @@ public class GUI implements Serializable{
 		
 		file = new Menu("_File");
 		
+		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy - HH:mm");
+		
 		MenuItem newGame = new MenuItem("_New");
 		newGame.setOnAction(e->{Yahtzee.startGame();});
 		newGame.setAccelerator(new KeyCodeCombination(KeyCode.N,KeyCombination.CONTROL_DOWN));
@@ -234,25 +236,60 @@ public class GUI implements Serializable{
 		quitGame.setOnAction(e->{Yahtzee.quitGame();});
 		quitGame.setAccelerator(new KeyCodeCombination(KeyCode.Q,KeyCombination.CONTROL_DOWN));
 		
-		
-		Menu saveGame = new Menu("_Save");
 		SaveGame.importSaveGames();
+		Menu saveGame = new Menu("_Save");
+		
 		for (int i = 0; i < SaveGame.getSaveGames().length; i++) {
 			int slotNumber = i;
 			MenuItem slot;
-			String menuString = String.format("Slot _%d - %s", (slotNumber) +1, "New Save");
-			
-			if(!game.equals(null)) {
-				menuString = String.format("Slot _%d - %s", (slotNumber) +1, "Date");
+			String menuString = String.format("Slot _%02d  -  %s", (slotNumber) +1, "New Save");
+			if(SaveGame.getSaveGames()[i] != null) {
+				String names = "";
+				for(Player player : SaveGame.getSaveGames()[i].getPlayers()) {
+					names += player.getPlayerName() + ", ";
+				}
+				names = names.substring(0, names.length()-2);
+				
+				menuString = String.format("Slot _%02d  -  %-19s    -    %s", 
+										   (slotNumber) +1, SaveGame.getSaveGames()[i].getDate().format(dateFormatter),names);
 			}
 			slot = new MenuItem(menuString);
-			slot.setOnAction(e->{SaveGame.saveGame(game,slotNumber);});
+			slot.setOnAction(e->{
+				if(SaveGame.getSaveGames()[slotNumber] != null) {
+					if(confirmDialog("Save Game?", "Overwrite game?", "Game in slot " + ((slotNumber) + 1) + " will be overwritten!", AlertType.CONFIRMATION)){
+						SaveGame.saveGame(game, slotNumber);
+						constructWindow(false);
+					}
+				}
+				else {
+					SaveGame.saveGame(game, slotNumber);
+					constructWindow(false);
+				}
+			});
 			saveGame.getItems().add(slot);
 		} 
 		
 		Menu loadGame = new Menu("_Load");
-		//load.setOnAction(e->{game = SaveGame.loadGame(this);
-							 //constructWindow(false);});
+		for (int i = 0; i < SaveGame.getSaveGames().length; i++) {
+			int slotNumber = i;
+			MenuItem slot = new MenuItem();
+			
+			slot.setDisable(true);
+			String menuString = String.format("Slot _%02d  -  %s", (slotNumber) +1, "Empty");
+			if(SaveGame.getSaveGames()[i] != null) {
+				menuString = String.format("Slot _%02d  -  %s", (slotNumber) +1, SaveGame.getSaveGames()[i].getDate().format(dateFormatter));
+				slot.setDisable(false);
+			}
+			slot.setText(menuString);
+			
+			slot.setOnAction(e->{
+					if(confirmDialog("Load Game?", "Load game from slot " + ((slotNumber) + 1) + "?", "Current game progress will be lost!", AlertType.CONFIRMATION)){
+						SaveGame.loadGame(this, slotNumber);
+						constructWindow(false);
+					}
+			});
+			loadGame.getItems().add(slot);
+		} 
 		
 		file.getItems().addAll(newGame,saveGame,loadGame,quitGame);
 		
