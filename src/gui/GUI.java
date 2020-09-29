@@ -441,7 +441,7 @@ public class GUI implements Serializable{
 		rollNumber.setFont(dicePaneFont);
 		rollNumber.setAlignment(Pos.CENTER);
 		rollNumber.setTextFill(Color.WHITE);
-		if(game.getCurrentPlayer().getThrowsRemaining()<=0 || game.isGameOver()) {
+		if(game.getCurrentPlayer().getThrowsRemaining()<=0 || game.isFinished()) {
 			rollNumber.setVisible(false);
 		}
 		
