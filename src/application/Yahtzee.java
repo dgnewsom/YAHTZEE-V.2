@@ -1,7 +1,10 @@
-package main;
+package application;
+
+import com.sun.javafx.application.LauncherImpl;
 
 import gui.GUI;
 import javafx.application.Application;
+import javafx.application.Preloader;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
@@ -11,11 +14,21 @@ public class Yahtzee extends Application {
 
 	private static Stage stage;
 	private static int numberOfPlayers = 1;
+	private static final int COUNT_LIMIT = 100;
 	
 	public static void main(String[] args) {
-		launch(args);
+		//Load splash screen
+		LauncherImpl.launchApplication(Yahtzee.class, SplashPreloader.class, args);
 	}
-	
+
+	@Override
+	public void init() throws Exception {
+		//count and pass value to the Splash preLoader
+		for (int i = 1; i <= COUNT_LIMIT; i ++) {
+            LauncherImpl.notifyPreloader(this, new Preloader.ProgressNotification(i));
+            Thread.sleep(30);
+        }
+	}
 	@Override
 	public void start(Stage stage){
 		

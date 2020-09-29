@@ -9,6 +9,9 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.Random;
 
+import application.Game;
+import application.SaveGame;
+import application.Yahtzee;
 import dice.Dice;
 import dice.Die;
 import dice.DieButton;
@@ -55,9 +58,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import main.Game;
-import main.SaveGame;
-import main.Yahtzee;
 import player.Player;
 import scoring.Category;
 import scoring.HighScores;
@@ -914,7 +914,8 @@ public class GUI implements Serializable{
         dialog.initOwner(Yahtzee.getStage());
         dialog.getIcons().add(new Image("images/icon.png"));
         dialog.setResizable(false);
-        dialog.setOnCloseRequest(e->{Yahtzee.startGame();});
+        dialog.setOnCloseRequest(e->{Yahtzee.startGame();
+        							 dialog.close();});
 		
         /*
 		 * Create and initialise title pane for the popup        
@@ -942,15 +943,32 @@ public class GUI implements Serializable{
          * Create the buttons for applying the settings or cancelling
          * and set event handlers
          */
-        Button okButton = new Button("OK");
-        okButton.setMinWidth(75);
+        Button yesButton = new Button("Yes");
+        yesButton.setMinWidth(75);
         //Set event to set custom parameters close window and start new game
-        okButton.setOnAction(e->{
+        yesButton.setOnAction(e->{
         	SaveGame.loadLatestGame(this);
         	dialog.close();
         	constructWindow(false);
         });
-        okButton.setOnKeyPressed(new EventHandler<KeyEvent>() {
+        yesButton.setOnKeyPressed(new EventHandler<KeyEvent>() {
+        	@Override
+        	public void handle(KeyEvent k) {
+        		if (k.getCode().equals(KeyCode.ENTER)) {
+        			Button temp = (Button) k.getSource();
+        			temp.fire();
+        		}
+        	}
+        });
+
+        Button noButton = new Button("No");
+        noButton.setMinWidth(75);
+        //Set event to set custom parameters close window and start new game
+        noButton.setOnAction(e->{
+        	dialog.close();
+        	Yahtzee.startGame();
+        });
+        noButton.setOnKeyPressed(new EventHandler<KeyEvent>() {
         	@Override
         	public void handle(KeyEvent k) {
         		if (k.getCode().equals(KeyCode.ENTER)) {
@@ -961,7 +979,7 @@ public class GUI implements Serializable{
         });
         
         //add buttons to buttons pane
-        buttons.getChildren().addAll(okButton);
+        buttons.getChildren().addAll(yesButton,noButton);
         buttonsPane.setRight(buttons);;
         
         //Add three main panes to root pane
